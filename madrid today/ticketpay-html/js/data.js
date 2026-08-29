@@ -24,7 +24,6 @@ const TIERS = [
   { id: "vip", name: "VIP", description: "Golden Circle access plus early entry and exclusive extras." },
 ];
 
-// OFFICIAL PRICES (EUR)
 const BASE_PRICE = {
   upper: 95,
   ga: 106,
@@ -43,7 +42,7 @@ const TIER_PERKS = {
 
 const REMAINING = {
   fri: { upper: 0, ga: 0, "golden-circle": 0, premium: 0, vip: 0 },
-  sat: { upper: 30, ga: 35, "golden-circle": 20, premium: 10, vip: 5 }, // total = 100
+  sat: { upper: 6, ga: 7, "golden-circle": 4, premium: 2, vip: 2 }, // total = 21
   sun: { upper: 30, ga: 35, "golden-circle": 20, premium: 10, vip: 5 }, // total = 100
 };
 
@@ -125,7 +124,7 @@ const GROUP_SLOTS_PER_DAY = 7;
 
 function defaultInventory() {
   return {
-    sat: { total: 100, remaining: 100, groupTotal: GROUP_SLOTS_PER_DAY, groupRemaining: GROUP_SLOTS_PER_DAY },
+    sat: { total: 21, remaining: 21, groupTotal: GROUP_SLOTS_PER_DAY, groupRemaining: GROUP_SLOTS_PER_DAY },
     sun: { total: 100, remaining: 100, groupTotal: GROUP_SLOTS_PER_DAY, groupRemaining: GROUP_SLOTS_PER_DAY },
   };
 }
