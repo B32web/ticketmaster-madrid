@@ -6,8 +6,14 @@
 <title>The Weeknd · After Hours Til Dawn — Madrid | Ticketmaster</title>
 <link rel="stylesheet" href="css/base.css" />
 <link rel="stylesheet" href="css/pages.css" />
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  const supabaseUrl = 'https://crixlmnrpbjxcflcxpbf.supabase.co';
+  const supabaseAnonKey = 'sb_publishable_rbE4Y8tl9HMPwe8Wh60yaA_MF5yGq9P';
+  const supabase = supabase.createClient(supabaseUrl, supabaseAnonKey);
+</script>
 <style>
-  /* ===== Seat map specific styles (integrated with your theme) ===== */
+  /* ===== Seat map specific styles ===== */
   .stadium-container {
     position: relative;
     width: 100%;
@@ -28,7 +34,6 @@
     transform-origin: 0 0;
     user-select: none;
   }
-  /* Section styles */
   .sectionBox {
     cursor: pointer;
     stroke: rgba(255,255,255,.85);
@@ -56,7 +61,6 @@
     stroke-width: 3px;
     stroke-linejoin: round;
   }
-  /* Seat boxes */
   .seatBox {
     cursor: pointer;
     stroke: #fff;
@@ -74,12 +78,10 @@
     50% { filter: drop-shadow(0 0 8px rgba(255,184,28,1)); }
   }
   .rowLabel,.colLabel { font-family: "Space Mono", monospace; font-size: 11px; fill: #6F7996; text-anchor: middle; pointer-events: none; }
-  /* Stage */
   .stageShape { fill: #1F262D; stroke: #3A4363; stroke-width: 2; }
   .stageText { font-family: "Oswald", sans-serif; font-weight: 700; font-size: 13px; letter-spacing: .14em; fill: #9AA3BA; text-anchor: middle; }
   .stageGlow { animation: glowpulse 3.2s ease-in-out infinite; }
   @keyframes glowpulse { 0%,100% { opacity: .35; } 50% { opacity: .75; } }
-  /* Controls */
   .map-controls {
     position: absolute;
     top: 15px;
@@ -97,10 +99,6 @@
     color: #333;
     font-size: 18px;
     cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: .15s;
   }
   .map-btn:hover { background: #f0f0f0; }
   .map-hint {
@@ -113,8 +111,6 @@
     border-radius: 8px;
     font-size: 12px;
     color: #555;
-    pointer-events: none;
-    z-index: 10;
   }
   .legend {
     position: absolute;
@@ -128,7 +124,6 @@
     gap: 16px;
     font-size: 12px;
     color: #555;
-    z-index: 10;
   }
   .legend-item { display: flex; align-items: center; gap: 6px; }
   .legend-dot { width: 12px; height: 12px; border-radius: 3px; }
@@ -136,7 +131,6 @@
   .legend-dot.selected { background: #FFB81C; }
   .legend-dot.occupied { background: #E5535D; }
   .legend-dot.unavailable { background: #4C5668; }
-  /* Bottom selection bar — sits directly below the stadium map */
   .bottom-bar {
     margin: 16px auto 0;
     width: min(720px, 100%);
@@ -172,11 +166,9 @@
     font-size: 14px;
     font-weight: 700;
     cursor: pointer;
-    transition: .15s;
   }
   .proceed-btn:disabled { opacity: .4; cursor: not-allowed; background: #ccc; }
   .proceed-btn:hover:not(:disabled) { background: #005ab9; }
-  /* Tooltip */
   .tooltip {
     position: fixed;
     display: none;
@@ -197,7 +189,6 @@
   .tooltip-status.selected { background: #FFB81C; color: #222; }
   .tooltip-status.occupied { background: #E5535D; color: #fff; }
   .tooltip-status.unavailable { background: #4C5668; color: #fff; }
-  /* Back button (hidden initially) */
   #backBtn {
     position: absolute;
     top: 15px;
@@ -212,7 +203,6 @@
     cursor: pointer;
   }
   #backBtn.show { display: block; }
-  /* Mini map */
   #miniMap {
     position: absolute;
     bottom: 15px;
@@ -271,9 +261,9 @@
       <nav class="breadcrumb"><a href="index.html">Home</a> / <a href="#">Music</a> / <a href="#">Madrid</a> / <span>The Weeknd</span></nav>
     </div>
 
-    <!-- Event Hero -->
+    <!-- Event Hero (CHANGED) -->
     <section class="event-hero">
-      <img src="images/concert/weeknd-hero.jpg" alt="The Weeknd performing" />
+      <img src="images/concert/weeknd1-performance.jpg" alt="The Weeknd performing" />
       <div class="event-hero-overlay"></div>
       <div class="event-hero-content">
         <div class="eyebrow">Madrid · Live Concert</div>
@@ -288,17 +278,11 @@
       <div class="lineup-grid stagger">
         <div class="lineup-card">
           <div class="lineup-avatar"><img src="images/concert/weeknd-stage.jpg" alt="The Weeknd" /></div>
-          <div>
-            <p class="lineup-role">Headliner</p>
-            <p class="lineup-name">The Weeknd</p>
-          </div>
+          <div><p class="lineup-role">Headliner</p><p class="lineup-name">The Weeknd</p></div>
         </div>
         <div class="lineup-card">
           <div class="lineup-avatar"><img src="images/concert/carti-portrait.jpg" alt="Playboi Carti" onerror="this.onerror=null;this.src='data:image/svg+xml;utf8,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Crect width=%22100%22 height=%22100%22 fill=%22%232b2f38%22/%3E%3Ctext x=%2250%22 y=%2258%22 font-family=%22Arial%22 font-size=%2230%22 fill=%22%23ffffff%22 text-anchor=%22middle%22%3EPC%3C/text%3E%3C/svg%3E';" /></div>
-          <div>
-            <p class="lineup-role">Guest</p>
-            <p class="lineup-name">Playboi Carti</p>
-          </div>
+          <div><p class="lineup-role">Guest</p><p class="lineup-name">Playboi Carti</p></div>
         </div>
       </div>
     </section>
@@ -327,11 +311,9 @@
         </div>
         <button id="backBtn">← Back</button>
         <div id="miniMap"><svg id="miniMapSvg" viewBox="0 0 1000 800"></svg></div>
-        <!-- SVG root for the map -->
         <svg id="stadiumSvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 800" width="100%" height="100%"></svg>
       </div>
 
-      <!-- Bottom bar -->
       <div class="bottom-bar">
         <div class="selection-summary">
           <div class="selection-count" id="selectionCount">0</div>
@@ -355,14 +337,8 @@
         <a href="#">Discover</a><a href="#">About Us</a><a href="#">Join Us</a><a href="#">Our Network</a><a href="#">Live Nation</a><a href="#">Purchase Policy</a><a href="#">Privacy Policy</a><a href="#">Cookie Policy</a><a href="#">Accessibility Statement</a><a href="#">Manage my cookies</a>
       </div>
     </div>
-    <div class="footer-social">
-      <span>Let's Connect</span>
-      <a href="#">Facebook</a><a href="#">X</a><a href="#">Blog</a><a href="#">Youtube</a><a href="#">Instagram</a><a href="#">LinkedIn</a><a href="#">TikTok</a>
-    </div>
-    <div class="footer-apps">
-      <span>Download Our Apps</span>
-      <a href="#">App Store</a><a href="#">Google Play</a>
-    </div>
+    <div class="footer-social"><span>Let's Connect</span><a href="#">Facebook</a><a href="#">X</a><a href="#">Blog</a><a href="#">Youtube</a><a href="#">Instagram</a><a href="#">LinkedIn</a><a href="#">TikTok</a></div>
+    <div class="footer-apps"><span>Download Apps</span><a href="#">App Store</a><a href="#">Google Play</a></div>
     <div class="footer-copy">© 1999-2026 Ticketmaster. All rights reserved.</div>
   </div>
 </footer>
@@ -377,47 +353,15 @@
 
 <script src="js/data.js"></script>
 <script src="js/store.js"></script>
-<!-- Supabase integration scaffold — safe to load, inactive until configured (see js/supabase-client.js) -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/supabase-client.js"></script>
 <script>
-  // Language switcher
   function setLanguage(lang) {
     document.documentElement.lang = lang;
     document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.lang === lang));
-    try { localStorage.setItem('tm_lang', lang); } catch (e) {}
+    localStorage.setItem('tm_lang', lang);
   }
-  const savedLang = (function(){ try { return localStorage.getItem('tm_lang') || 'es'; } catch (e) { return 'es'; } })();
-  setLanguage(savedLang);
+  setLanguage(localStorage.getItem('tm_lang') || 'es');
 
-  /* =========================================================
-     PACKAGE CONTEXT — set by packages.html (day/tier/qty).
-     Falls back gracefully if someone lands here directly.
-  ========================================================= */
-  const urlParams = new URLSearchParams(window.location.search);
-  let packageCtx = (typeof Cart !== "undefined" && Cart.getPackage) ? Cart.getPackage() : null;
-  if (urlParams.get("qty")) {
-    packageCtx = {
-      day: urlParams.get("day") || "sat",
-      tier: urlParams.get("tier") || null,
-      tierName: urlParams.get("tier") ? (TIERS.find(t => t.id === urlParams.get("tier"))?.name || urlParams.get("tier")) : null,
-      qty: parseInt(urlParams.get("qty"), 10) || 1
-    };
-  }
-  const targetQty = packageCtx ? (packageCtx.qty || 1) : 0;
-
-  const packageBanner = document.getElementById("packageBanner");
-  if (packageCtx && targetQty > 0) {
-    const dayInfo = DAYS.find(d => d.id === packageCtx.day);
-    packageBanner.style.display = "block";
-    packageBanner.textContent = `Your package: ${packageCtx.tierName || "Ticket"} × ${targetQty}` +
-      (dayInfo ? ` — ${dayInfo.weekday}, ${dayInfo.date}` : "") +
-      `. Select ${targetQty} seat${targetQty > 1 ? "s" : ""} below, then proceed to payment.`;
-  }
-
-  /* =========================================================
-     SEAT MAP ENGINE (fully working)
-  ========================================================= */
+  /* ===== FULL SEAT MAP ENGINE ===== */
   const NS = "http://www.w3.org/2000/svg";
   const svg = document.getElementById("stadiumSvg");
   const mapView = document.getElementById("mapView");
@@ -434,7 +378,6 @@
   const miniMap = document.getElementById("miniMap");
   const miniMapSvg = document.getElementById("miniMapSvg");
 
-  // ============ SECTIONS ============
   const SECTIONS = {
     L101: { name: "Lower 101", tier: "Lower Bowl", price: 145, color: "lower" },
     L102: { name: "Lower 102", tier: "Lower Bowl", price: 145, color: "lower" },
@@ -477,13 +420,7 @@
           let status = "available";
           if (hash < 13) status = "occupied";
           else if (hash < 18) status = "unavailable";
-          seats.set(sectionId + "-" + row + c, {
-            id: sectionId + "-" + row + c,
-            section: sectionId,
-            row, number: c,
-            price: section.price,
-            status
-          });
+          seats.set(sectionId + "-" + row + c, { id: sectionId + "-" + row + c, section: sectionId, row, number: c, price: section.price, status });
           seatCount++;
         }
       }
@@ -491,7 +428,6 @@
   }
   generateSeats();
 
-  // ============ GEOMETRY ============
   const cx = 500, cy = 430, yScale = 0.66;
   function polar(r, angleDeg) {
     const rad = angleDeg * Math.PI / 180;
@@ -501,10 +437,7 @@
     const p1 = polar(outerR, aStart), p2 = polar(outerR, aEnd);
     const p3 = polar(innerR, aEnd), p4 = polar(innerR, aStart);
     const large = (aEnd - aStart) > 180 ? 1 : 0;
-    return `M ${p1.x.toFixed(2)} ${p1.y.toFixed(2)} ` +
-           `A ${outerR} ${(outerR * yScale).toFixed(2)} 0 ${large} 1 ${p2.x.toFixed(2)} ${p2.y.toFixed(2)} ` +
-           `L ${p3.x.toFixed(2)} ${p3.y.toFixed(2)} ` +
-           `A ${innerR} ${(innerR * yScale).toFixed(2)} 0 ${large} 0 ${p4.x.toFixed(2)} ${p4.y.toFixed(2)} Z`;
+    return `M ${p1.x.toFixed(2)} ${p1.y.toFixed(2)} A ${outerR} ${(outerR * yScale).toFixed(2)} 0 ${large} 1 ${p2.x.toFixed(2)} ${p2.y.toFixed(2)} L ${p3.x.toFixed(2)} ${p3.y.toFixed(2)} A ${innerR} ${(innerR * yScale).toFixed(2)} 0 ${large} 0 ${p4.x.toFixed(2)} ${p4.y.toFixed(2)} Z`;
   }
 
   function createRing(ids, inner, outer) {
@@ -531,13 +464,10 @@
     svg.appendChild(g);
   }
 
-  // Draw overview
   function renderOverview() {
     svg.setAttribute("viewBox", "0 0 1000 800");
     svg.innerHTML = "";
-    // stage glow
     const defs = document.createElementNS(NS, "defs");
-
     const grad = document.createElementNS(NS, "radialGradient");
     grad.setAttribute("id", "stageGlow");
     grad.appendChild(document.createElementNS(NS, "stop")).setAttribute("offset", "0%");
@@ -547,8 +477,6 @@
     grad.lastChild.setAttribute("stop-color", "#FFB81C");
     grad.lastChild.setAttribute("stop-opacity", "0");
     defs.appendChild(grad);
-
-    // Tier gradients — premium glossy fill per ring
     const tierGradients = [
       { id: "gradLower", from: "#5FA1FF", to: "#2E6FE0" },
       { id: "gradClub",  from: "#5C8CE8", to: "#28489C" },
@@ -567,16 +495,13 @@
       g.appendChild(s1); g.appendChild(s2);
       defs.appendChild(g);
     });
-
     svg.appendChild(defs);
-
     const glow = document.createElementNS(NS, "ellipse");
     glow.setAttribute("cx", 593); glow.setAttribute("cy", 430);
     glow.setAttribute("rx", 130); glow.setAttribute("ry", 120);
     glow.setAttribute("fill", "url(#stageGlow)");
     glow.setAttribute("class", "stageGlow");
     svg.appendChild(glow);
-
     const stage = document.createElementNS(NS, "polygon");
     stage.setAttribute("points", "560,372 626,406 626,454 560,488");
     stage.setAttribute("class", "stageShape");
@@ -586,12 +511,9 @@
     stageText.setAttribute("class", "stageText");
     stageText.textContent = "STAGE";
     svg.appendChild(stageText);
-
     createRing(["L101","L102","L103","L104","L105","L106","L107","L108"], 235, 290);
     createRing(["C201","C202","C203","C204","C205","C206"], 300, 345);
     createRing(["U301","U302","U303","U304","U305","U306","U307","U308"], 355, 400);
-
-    // VIP / Floor
     const floor = document.createElementNS(NS, "rect");
     floor.setAttribute("x", 425); floor.setAttribute("y", 350);
     floor.setAttribute("width", 190); floor.setAttribute("height", 140);
@@ -603,14 +525,12 @@
     floorText.setAttribute("class", "sectionLabel");
     floorText.textContent = "VIP / FLOOR";
     svg.appendChild(floorText);
-
     mapHint.textContent = "Click a section · Scroll to zoom · Drag to pan";
     backBtn.classList.remove("show");
     miniMap.classList.remove("show");
     fitMap();
   }
 
-  // ============ SECTION VIEW ============
   function renderSection(sectionId) {
     const meta = SECTIONS[sectionId];
     if (!meta) return;
@@ -623,8 +543,6 @@
     const contentW = 900, contentH = 600;
     svg.setAttribute("viewBox", `0 0 ${contentW} ${contentH}`);
     svg.innerHTML = "";
-
-    // header
     const title = document.createElementNS(NS, "text");
     title.setAttribute("x", 450); title.setAttribute("y", 45);
     title.setAttribute("text-anchor", "middle"); title.setAttribute("font-size", "22");
@@ -637,7 +555,6 @@
     subtitle.setAttribute("fill", "#777");
     subtitle.textContent = meta.tier + " · from €" + meta.price;
     svg.appendChild(subtitle);
-
     seatsInSection.forEach((seat, idx) => {
       const rowIdx = seat.row.charCodeAt(0) - 65;
       const colIdx = seat.number - 1;
@@ -662,7 +579,6 @@
       label.textContent = seat.number;
       svg.appendChild(label);
     });
-
     for (let i=0; i<6; i++) {
       const label = document.createElementNS(NS, "text");
       label.setAttribute("x", startX - 25); label.setAttribute("y", startY + i*(cellH+gapY)+20);
@@ -671,7 +587,6 @@
       label.textContent = String.fromCharCode(65+i);
       svg.appendChild(label);
     }
-
     mapHint.textContent = "Click a blue seat to select it · Use Back to return";
     backBtn.classList.add("show");
     renderMiniMap(sectionId);
@@ -692,7 +607,6 @@
     stageShape.setAttribute("points", "560,372 626,406 626,454 560,488");
     stageShape.setAttribute("class", "mm-stage");
     miniMapSvg.appendChild(stageShape);
-
     RING_GROUPS.forEach(group => {
       const step = 360 / group.ids.length;
       group.ids.forEach((id, index) => {
@@ -704,7 +618,6 @@
         miniMapSvg.appendChild(p);
       });
     });
-
     const rect = document.createElementNS(NS, "rect");
     rect.setAttribute("x", FLOOR_RECT.x); rect.setAttribute("y", FLOOR_RECT.y);
     rect.setAttribute("width", FLOOR_RECT.w); rect.setAttribute("height", FLOOR_RECT.h);
@@ -713,12 +626,9 @@
     miniMapSvg.appendChild(rect);
   }
 
-  // ============ ZOOM / PAN ============
   let scale = 1, tx = 0, ty = 0, minScale = .5, maxScale = 6;
   let dragging = false, moved = false, startX, startY, startTX, startTY;
-  function applyTransform() {
-    svg.style.transform = `translate(${tx}px, ${ty}px) scale(${scale})`;
-  }
+  function applyTransform() { svg.style.transform = `translate(${tx}px, ${ty}px) scale(${scale})`; }
   function fitMap() {
     const rect = mapView.getBoundingClientRect();
     const fit = Math.min(rect.width / 1000, rect.height / 800) * .9;
@@ -744,12 +654,7 @@
     scale = newScale;
     applyTransform();
   }
-
-  mapView.addEventListener("wheel", e => {
-    e.preventDefault();
-    zoomAt(e.clientX, e.clientY, e.deltaY < 0 ? 1.15 : .87);
-  }, { passive: false });
-
+  mapView.addEventListener("wheel", e => { e.preventDefault(); zoomAt(e.clientX, e.clientY, e.deltaY < 0 ? 1.15 : .87); }, { passive: false });
   mapView.addEventListener("mousedown", e => {
     if (e.target.closest(".sectionBox") || e.target.closest(".seatBox")) return;
     dragging = true; moved = false;
@@ -763,7 +668,6 @@
     applyTransform();
   });
   window.addEventListener("mouseup", () => { dragging = false; });
-
   document.getElementById("zoomIn").addEventListener("click", () => {
     const r = mapView.getBoundingClientRect();
     zoomAt(r.left + r.width/2, r.top + r.height/2, 1.25);
@@ -775,92 +679,56 @@
   document.getElementById("resetZoom").addEventListener("click", () => {
     if (backBtn.classList.contains("show")) fitSection(); else fitMap();
   });
-
-  // ============ CLICK HANDLING ============
   svg.addEventListener("click", e => {
     if (moved) return;
     const sectionEl = e.target.closest(".sectionBox");
-    if (sectionEl && !sectionEl.dataset.seat) {
-      const sectionId = sectionEl.dataset.section;
-      renderSection(sectionId);
-      return;
-    }
+    if (sectionEl && !sectionEl.dataset.seat) { renderSection(sectionEl.dataset.section); return; }
     const seatEl = e.target.closest(".seatBox");
     if (seatEl) {
       const seatId = seatEl.dataset.seat;
       const seat = seats.get(seatId);
       if (!seat) return;
-      if (seat.status !== "available" && !selectedSeats.has(seatId)) {
-        seatEl.animate([{transform:'translateX(0)'},{transform:'translateX(-3px)'},{transform:'translateX(3px)'},{transform:'translateX(0)'}], {duration:180});
-        return;
-      }
-      if (selectedSeats.has(seatId)) {
-        selectedSeats.delete(seatId);
-      } else {
-        if (selectedSeats.size >= 6) { alert("Max 6 seats"); return; }
-        selectedSeats.set(seatId, seat);
-      }
+      if (seat.status !== "available" && !selectedSeats.has(seatId)) { seatEl.animate([{transform:'translateX(0)'},{transform:'translateX(-3px)'},{transform:'translateX(3px)'},{transform:'translateX(0)'}], {duration:180}); return; }
+      if (selectedSeats.has(seatId)) { selectedSeats.delete(seatId); } else { if (selectedSeats.size >= 6) { alert("Max 6 seats"); return; } selectedSeats.set(seatId, seat); }
       refreshSelection();
-      const sectionId = seat.section;
-      renderSection(sectionId); // re-render to update colors
+      renderSection(seat.section);
     }
   });
-
-  // ============ TOOLTIP ============
   const statusText = { available: "Available", taken: "Taken", unavailable: "Not available", selected: "Selected" };
   svg.addEventListener("mouseover", e => {
     const t = e.target;
     if (t.classList && t.classList.contains("sectionBox")) {
       const meta = SECTIONS[t.dataset.section];
       if (!meta) return;
-      tooltipTitle.textContent = meta.name;
-      tooltipRow.textContent = meta.tier;
-      tooltipPrice.textContent = "from €" + meta.price;
-      tooltipStatus.textContent = "Available";
-      tooltipStatus.className = "tooltip-status available";
-      tooltip.style.display = "block";
-      positionTooltip(e.clientX, e.clientY);
+      tooltipTitle.textContent = meta.name; tooltipRow.textContent = meta.tier; tooltipPrice.textContent = "from €" + meta.price; tooltipStatus.textContent = "Available"; tooltipStatus.className = "tooltip-status available";
+      tooltip.style.display = "block"; positionTooltip(e.clientX, e.clientY);
     } else if (t.classList && t.classList.contains("seatBox")) {
       const seat = seats.get(t.dataset.seat);
       if (!seat) return;
-      tooltipTitle.textContent = SECTIONS[seat.section].name;
-      tooltipRow.textContent = "Row " + seat.row + " · Seat " + seat.number;
-      tooltipPrice.textContent = "€" + seat.price;
-      tooltipStatus.textContent = selectedSeats.has(seat.id) ? "Selected" : seat.status;
-      tooltipStatus.className = "tooltip-status " + (selectedSeats.has(seat.id) ? "selected" : seat.status);
-      tooltip.style.display = "block";
-      positionTooltip(e.clientX, e.clientY);
+      tooltipTitle.textContent = SECTIONS[seat.section].name; tooltipRow.textContent = "Row " + seat.row + " · Seat " + seat.number; tooltipPrice.textContent = "€" + seat.price; tooltipStatus.textContent = selectedSeats.has(seat.id) ? "Selected" : seat.status; tooltipStatus.className = "tooltip-status " + (selectedSeats.has(seat.id) ? "selected" : seat.status);
+      tooltip.style.display = "block"; positionTooltip(e.clientX, e.clientY);
     }
   });
   svg.addEventListener("mousemove", e => {
-    if (e.target.classList && (e.target.classList.contains("sectionBox") || e.target.classList.contains("seatBox"))) {
-      positionTooltip(e.clientX, e.clientY);
-    }
+    if (e.target.classList && (e.target.classList.contains("sectionBox") || e.target.classList.contains("seatBox"))) positionTooltip(e.clientX, e.clientY);
   });
   svg.addEventListener("mouseout", e => {
-    if (e.target.classList && (e.target.classList.contains("sectionBox") || e.target.classList.contains("seatBox"))) {
-      tooltip.style.display = "none";
-    }
+    if (e.target.classList && (e.target.classList.contains("sectionBox") || e.target.classList.contains("seatBox"))) tooltip.style.display = "none";
   });
   function positionTooltip(clientX, clientY) {
     const w = 190, h = 100;
     let left = clientX + 16, top = clientY + 16;
     if (left + w > window.innerWidth) left = clientX - w - 16;
     if (top + h > window.innerHeight) top = clientY - h - 16;
-    tooltip.style.left = left + "px";
-    tooltip.style.top = top + "px";
+    tooltip.style.left = left + "px"; tooltip.style.top = top + "px";
   }
-
-  // ============ SELECTION / CART ============
   function refreshSelection() {
     const count = selectedSeats.size;
     let total = 0;
     selectedSeats.forEach(seat => total += seat.price);
     selectionCount.textContent = count;
     if (count === 0) {
-      selectionDescription.textContent = targetQty > 0
-        ? `Select ${targetQty} seat${targetQty > 1 ? "s" : ""} to match your package`
-        : "Choose your seats from the map";
+      selectionDescription.textContent = targetQty > 0 ? `Select ${targetQty} seat${targetQty > 1 ? "s" : ""} to match your package` : "Choose your seats from the map";
       proceedBtn.disabled = true;
       proceedBtn.textContent = "Proceed to Payment";
     } else {
@@ -871,7 +739,6 @@
       else if (count >= 2) discountRate = 0.03;
       const discount = Math.round(total * discountRate * 100) / 100;
       const finalTotal = total - discount;
-
       if (targetQty > 0 && count < targetQty) {
         const remaining = targetQty - count;
         selectionDescription.textContent = `${count} of ${targetQty} selected · €${finalTotal.toFixed(2)} so far — pick ${remaining} more seat${remaining > 1 ? "s" : ""}`;
@@ -887,26 +754,24 @@
   proceedBtn.addEventListener("click", () => {
     if (selectedSeats.size === 0) return;
     if (targetQty > 0 && selectedSeats.size < targetQty) return;
-    const seatList = Array.from(selectedSeats.values()).map(s => ({
-      section: s.section, row: s.row, seat: s.number, price: s.price, id: s.id,
-      sectionName: SECTIONS[s.section].name, tierLabel: SECTIONS[s.section].tier
-    }));
+    const seatList = Array.from(selectedSeats.values()).map(s => ({ section: s.section, row: s.row, seat: s.number, price: s.price, id: s.id, sectionName: SECTIONS[s.section].name, tierLabel: SECTIONS[s.section].tier }));
     Cart.setSeats(seatList);
-    Cart.setPackage({
-      day: (packageCtx && packageCtx.day) || "sat",
-      tier: (packageCtx && packageCtx.tier) || null,
-      tierName: (packageCtx && packageCtx.tierName) || null,
-      qty: seatList.length
-    });
+    Cart.setPackage({ day: (packageCtx && packageCtx.day) || "sat", tier: (packageCtx && packageCtx.tier) || null, tierName: (packageCtx && packageCtx.tierName) || null, qty: seatList.length });
     window.location.href = "checkout.html";
   });
-
-  // Back button
-  backBtn.addEventListener("click", () => {
-    renderOverview();
-  });
-
-  // INIT
+  backBtn.addEventListener("click", () => { renderOverview(); });
+  const urlParams = new URLSearchParams(window.location.search);
+  let packageCtx = (typeof Cart !== "undefined" && Cart.getPackage) ? Cart.getPackage() : null;
+  if (urlParams.get("qty")) {
+    packageCtx = { day: urlParams.get("day") || "sat", tier: urlParams.get("tier") || null, tierName: urlParams.get("tier") ? (TIERS.find(t => t.id === urlParams.get("tier"))?.name || urlParams.get("tier")) : null, qty: parseInt(urlParams.get("qty"), 10) || 1 };
+  }
+  const targetQty = packageCtx ? (packageCtx.qty || 1) : 0;
+  const packageBanner = document.getElementById("packageBanner");
+  if (packageCtx && targetQty > 0) {
+    const dayInfo = DAYS.find(d => d.id === packageCtx.day);
+    packageBanner.style.display = "block";
+    packageBanner.textContent = `Your package: ${packageCtx.tierName || "Ticket"} × ${targetQty}` + (dayInfo ? ` — ${dayInfo.weekday}, ${dayInfo.date}` : "") + `. Select ${targetQty} seat${targetQty > 1 ? "s" : ""} below, then proceed to payment.`;
+  }
   renderOverview();
   refreshSelection();
   const available = Array.from(seats.values()).filter(s => s.status === "available").length;
