@@ -6,17 +6,18 @@
 <title>Create account | Ticketmaster</title>
 <link rel="stylesheet" href="css/base.css" />
 <link rel="stylesheet" href="css/pages.css" />
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  const supabaseUrl = 'https://crixlmnrpbjxcflcxpbf.supabase.co';
+  const supabaseAnonKey = 'sb_publishable_rbE4Y8tl9HMPwe8Wh60yaA_MF5yGq9P';
+  const supabase = supabase.createClient(supabaseUrl, supabaseAnonKey);
+</script>
 </head>
 <body>
 
 <header class="site-header">
   <div class="container">
-    <a href="index.html" class="brand">
-      <span class="tm-logo">
-        <span class="tm-logo-mark">®</span>
-        <span>ticketmaster</span>
-      </span>
-    </a>
+    <a href="index.html" class="brand"><span class="tm-logo"><span class="tm-logo-mark">®</span><span>ticketmaster</span></span></a>
     <nav class="main-nav">
       <a href="index.html">Home</a>
       <a href="event.html">Madrid Event</a>
@@ -39,9 +40,7 @@
       <p class="eyebrow auth-eyebrow">JOIN TICKETMASTER</p>
       <h1 class="font-display">Create account</h1>
       <p class="auth-sub">Save your details for faster checkout.</p>
-
       <div class="form-error" id="form-error"></div>
-
       <form id="signup-form">
         <div class="field">
           <label for="name">Full name</label>
@@ -57,7 +56,6 @@
         </div>
         <button type="submit" class="btn btn-primary btn-block">Create account</button>
       </form>
-
       <p class="auth-foot">Already have an account? <a href="login.html">Log in</a></p>
     </div>
   </div>
@@ -69,48 +67,27 @@
       <span class="tm-logo"><span class="tm-logo-mark">®</span><span>ticketmaster</span></span>
       <div class="footer-links">
         <span>Looking for Help</span>
-        <a href="#">Discover</a>
-        <a href="#">About Us</a>
-        <a href="#">Join Us</a>
-        <a href="#">Our Network</a>
-        <a href="#">Live Nation</a>
-        <a href="#">Purchase Policy</a>
-        <a href="#">Privacy Policy</a>
-        <a href="#">Cookie Policy</a>
-        <a href="#">Accessibility Statement</a>
-        <a href="#">Manage my cookies</a>
+        <a href="#">Discover</a><a href="#">About Us</a><a href="#">Join Us</a><a href="#">Our Network</a><a href="#">Live Nation</a><a href="#">Purchase Policy</a><a href="#">Privacy Policy</a><a href="#">Cookie Policy</a><a href="#">Accessibility Statement</a><a href="#">Manage my cookies</a>
       </div>
     </div>
-    <div class="footer-social">
-      <span>Let's Connect</span>
-      <a href="#">Facebook</a><a href="#">X</a><a href="#">Blog</a><a href="#">Youtube</a><a href="#">Instagram</a><a href="#">LinkedIn</a><a href="#">TikTok</a>
-    </div>
-    <div class="footer-apps">
-      <span>Download Our Apps</span>
-      <a href="#">App Store</a><a href="#">Google Play</a>
-    </div>
+    <div class="footer-social"><span>Let's Connect</span><a href="#">Facebook</a><a href="#">X</a><a href="#">Blog</a><a href="#">Youtube</a><a href="#">Instagram</a><a href="#">LinkedIn</a><a href="#">TikTok</a></div>
+    <div class="footer-apps"><span>Download Apps</span><a href="#">App Store</a><a href="#">Google Play</a></div>
     <div class="footer-copy">© 1999-2026 Ticketmaster. All rights reserved.</div>
   </div>
 </footer>
 
 <script src="js/data.js"></script>
 <script src="js/store.js"></script>
-<!-- Supabase integration scaffold — safe to load, inactive until configured (see js/supabase-client.js) -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/supabase-client.js"></script>
 <script>
-  // Language switcher
   function setLanguage(lang) {
     document.documentElement.lang = lang;
-    document.querySelectorAll('.lang-btn').forEach(btn => {
-      btn.classList.toggle('active', btn.dataset.lang === lang);
-    });
+    document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.lang === lang));
     try { localStorage.setItem('tm_lang', lang); } catch (e) {}
   }
   const savedLang = (function(){ try { return localStorage.getItem('tm_lang') || 'en'; } catch (e) { return 'en'; } })();
   setLanguage(savedLang);
 
-  document.getElementById("signup-form").addEventListener("submit", (e) => {
+  document.getElementById("signup-form").addEventListener("submit", async (e) => {
     e.preventDefault();
     const name = document.getElementById("name").value.trim();
     const email = document.getElementById("email").value.trim();
@@ -123,7 +100,13 @@
       return;
     }
     errorBox.classList.remove("show");
-    Auth.signUp(name, email);
+
+    const { data, error } = await Auth.signUp(name, email, password);
+    if (error) {
+      errorBox.textContent = error.message;
+      errorBox.classList.add("show");
+      return;
+    }
     window.location.href = "account.html";
   });
 </script>
