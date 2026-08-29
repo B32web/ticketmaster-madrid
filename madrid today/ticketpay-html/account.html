@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>My Account | Ticketmaster</title>
+<link rel="stylesheet" href="css/base.css" />
+<link rel="stylesheet" href="css/pages.css" />
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container">
+    <a href="index.html" class="brand">
+      <span class="tm-logo">
+        <span class="tm-logo-mark">®</span>
+        <span>ticketmaster</span>
+      </span>
+    </a>
+    <nav class="main-nav">
+      <a href="index.html">Home</a>
+      <a href="event.html">Madrid Event</a>
+      <a href="packages.html">Buy Tickets</a>
+      <a href="tickets.html">My Tickets</a>
+    </nav>
+    <div class="header-actions">
+      <div class="lang-switch">
+        <button class="lang-btn" data-lang="es" onclick="setLanguage('es')"><span class="flag-icon">🇪🇸</span> ES</button>
+        <button class="lang-btn active" data-lang="en" onclick="setLanguage('en')"><span class="flag-icon">🇬🇧</span> EN</button>
+      </div>
+      <div id="header-auth-slot"></div>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="dash-header">
+    <div class="container">
+      <p class="eyebrow" id="dash-eyebrow">YOUR ACCOUNT</p>
+      <h1 class="font-display dash-greeting" id="dash-greeting">Welcome back</h1>
+    </div>
+  </div>
+
+  <div class="container dash-grid">
+    <aside class="dash-nav">
+      <div class="dash-nav-item is-active">Overview</div>
+      <a href="tickets.html" style="text-decoration:none;"><div class="dash-nav-item">My Tickets</div></a>
+      <a href="event.html" style="text-decoration:none;"><div class="dash-nav-item">Buy Tickets</div></a>
+      <div class="dash-nav-item" id="signout-btn">Log out</div>
+    </aside>
+
+    <div>
+      <div class="stat-grid">
+        <div class="stat-card">
+          <div class="stat-value" id="stat-orders">0</div>
+          <div class="stat-label">Orders placed</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="stat-tickets">0</div>
+          <div class="stat-label">Tickets owned</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="stat-spend">€0</div>
+          <div class="stat-label">Total spent</div>
+        </div>
+      </div>
+
+      <h2 class="font-display" style="font-size:22px;margin-bottom:18px;">Recent orders</h2>
+      <div id="orders-list"></div>
+    </div>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-left">
+      <span class="tm-logo"><span class="tm-logo-mark">®</span><span>ticketmaster</span></span>
+      <div class="footer-links">
+        <span>Looking for Help</span>
+        <a href="#">Discover</a>
+        <a href="#">About Us</a>
+        <a href="#">Join Us</a>
+        <a href="#">Our Network</a>
+        <a href="#">Live Nation</a>
+        <a href="#">Purchase Policy</a>
+        <a href="#">Privacy Policy</a>
+        <a href="#">Cookie Policy</a>
+        <a href="#">Accessibility Statement</a>
+        <a href="#">Manage my cookies</a>
+      </div>
+    </div>
+    <div class="footer-social">
+      <span>Let's Connect</span>
+      <a href="#">Facebook</a><a href="#">X</a><a href="#">Blog</a><a href="#">Youtube</a><a href="#">Instagram</a><a href="#">LinkedIn</a><a href="#">TikTok</a>
+    </div>
+    <div class="footer-apps">
+      <span>Download Our Apps</span>
+      <a href="#">App Store</a><a href="#">Google Play</a>
+    </div>
+    <div class="footer-copy">© 1999-2026 Ticketmaster. All rights reserved.</div>
+  </div>
+</footer>
+
+<script src="js/data.js"></script>
+<script src="js/store.js"></script>
+<!-- Supabase integration scaffold — safe to load, inactive until configured (see js/supabase-client.js) -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase-client.js"></script>
+<script>
+  // Language switcher
+  function setLanguage(lang) {
+    document.documentElement.lang = lang;
+    const eyebrow = document.getElementById("dash-eyebrow");
+    const greeting = document.getElementById("dash-greeting");
+    if (lang === "es") {
+      eyebrow.textContent = "TU CUENTA";
+      greeting.textContent = "Bienvenido de nuevo";
+    } else {
+      eyebrow.textContent = "YOUR ACCOUNT";
+      greeting.textContent = "Welcome back";
+    }
+    document.querySelectorAll('.lang-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.lang === lang);
+    });
+    try { localStorage.setItem('tm_lang', lang); } catch (e) {}
+  }
+
+  // Initialize language
+  const savedLang = (function(){ try { return localStorage.getItem('tm_lang') || 'en'; } catch (e) { return 'en'; } })();
+  setLanguage(savedLang);
+
+  // Auth check
+  const user = Auth.get();
+  if (!user) {
+    window.location.href = "login.html";
+  } else {
+    document.getElementById("dash-greeting").textContent = `Hi, ${user.name || user.email.split("@")[0]}`;
+  }
+
+  // Stats
+  const orders = Orders.all();
+  document.getElementById("stat-orders").textContent = orders.length;
+  const totalTickets = orders.reduce((sum, o) => sum + o.ticketCount, 0);
+  document.getElementById("stat-tickets").textContent = totalTickets;
+  const totalSpend = orders.reduce((sum, o) => sum + o.total, 0);
+  document.getElementById("stat-spend").textContent = formatEUR(totalSpend);
+
+  // Orders list
+  const list = document.getElementById("orders-list");
+  if (orders.length === 0) {
+    list.innerHTML = `
+      <div class="empty-state">
+        <h3>No orders yet</h3>
+        <p>When you complete a checkout, your order will appear here.</p>
+        <div style="margin-top:18px;"><a href="event.html" class="btn btn-primary btn-sm">Browse Madrid tickets</a></div>
+      </div>`;
+  } else {
+    list.innerHTML = orders
+      .map(
+        (o) => `
+      <div class="order-row">
+        <div class="order-meta">
+          <strong>${o.summary}</strong>
+          <span>${o.date} · ${o.ticketCount} ticket${o.ticketCount > 1 ? "s" : ""} · #${o.code}</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:16px;">
+          <span class="badge">CONFIRMED</span>
+          <span class="order-price">${formatEUR(o.total)}</span>
+        </div>
+      </div>`
+      )
+      .join("");
+  }
+
+  // Signout
+  document.getElementById("signout-btn").addEventListener("click", () => {
+    Auth.signOut();
+    window.location.href = "index.html";
+  });
+</script>
+</body>
+</html>

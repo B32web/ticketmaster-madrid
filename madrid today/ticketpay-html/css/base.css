@@ -1,0 +1,315 @@
+/* =========================================================
+   TICKETMASTER — Official Brand Design System
+   Colors: Azure #026CDF, Black Pearl #1F262D, White #FFFFFF
+   Font: Inter (primary), Arial fallback
+   ========================================================= */
+
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap");
+
+:root {
+  /* Brand colors */
+  --tm-azure: #026CDF;
+  --tm-azure-hover: #005BC8;
+  --tm-azure-light: #E8F1FC;
+  --tm-black-pearl: #1F262D;
+  --tm-black: #121212;
+  --tm-white: #FFFFFF;
+  --tm-gray-100: #F5F5F5;
+  --tm-gray-200: #E6E6E6;
+  --tm-gray-300: #D6D6D6;
+  --tm-gray-500: #999999;
+  --tm-gray-700: #646464;
+  --tm-gray-900: #262626;
+
+  --tm-success: #00875A;
+  --tm-danger: #D92D20;
+
+  /* Fonts */
+  --font-display: "Inter", Arial, sans-serif;
+  --font-body: "Inter", Arial, sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+
+  /* Sizing */
+  --container: 1200px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 12px;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 3px rgba(18,18,18,.08);
+  --shadow-md: 0 4px 12px rgba(18,18,18,.1);
+  --shadow-lg: 0 8px 30px rgba(18,18,18,.12);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--tm-white);
+  color: var(--tm-black);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+::selection {
+  background: var(--tm-azure);
+  color: var(--tm-white);
+}
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible {
+  outline: 2px solid var(--tm-azure);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+.container {
+  width: min(var(--container), calc(100% - 48px));
+  margin: 0 auto;
+}
+
+/* ---------- LOGO ---------- */
+.tm-logo {
+  display: inline-flex;
+  align-items: flex-start;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 28px;
+  font-weight: 800;
+  font-style: italic;
+  letter-spacing: -1.2px;
+  color: var(--tm-azure);
+  transform: skewX(-7deg);
+  line-height: 1;
+}
+
+.tm-logo-mark {
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  font-style: normal;
+  margin-right: 2px;
+  margin-top: -1px;
+  transform: skewX(7deg);
+}
+
+/* ---------- HEADER ---------- */
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  background: var(--tm-white);
+  border-bottom: 1px solid var(--tm-gray-200);
+}
+
+.site-header .container {
+  height: 68px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.main-nav {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+}
+
+.main-nav a {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--tm-gray-700);
+  transition: color .2s ease;
+}
+
+.main-nav a:hover,
+.main-nav a.active {
+  color: var(--tm-black);
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+/* Language switcher (no emojis) */
+.lang-switch {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--tm-white);
+  border: 1px solid var(--tm-gray-300);
+  border-radius: 999px;
+  padding: 4px;
+}
+
+.lang-btn {
+  border: none;
+  background: transparent;
+  padding: 7px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--tm-gray-700);
+  transition: background .2s, color .2s;
+}
+
+.lang-btn:hover {
+  background: var(--tm-gray-100);
+}
+
+.lang-btn.active {
+  background: var(--tm-azure);
+  color: var(--tm-white);
+}
+
+/* ---------- BUTTONS ---------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 16px;
+  padding: 13px 24px;
+  border-radius: 4px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background .2s, border-color .2s, transform .15s;
+  white-space: nowrap;
+}
+
+.btn:active {
+  transform: scale(.98);
+}
+
+.btn-primary {
+  background: var(--tm-azure);
+  color: var(--tm-white);
+}
+
+.btn-primary:hover {
+  background: var(--tm-azure-hover);
+}
+
+.btn-secondary {
+  background: transparent;
+  border-color: var(--tm-gray-300);
+  color: var(--tm-black);
+}
+
+.btn-secondary:hover {
+  border-color: var(--tm-azure);
+  color: var(--tm-azure);
+}
+
+.btn-light {
+  background: var(--tm-white);
+  color: var(--tm-black);
+  border-color: var(--tm-gray-200);
+}
+
+.btn-light:hover {
+  background: var(--tm-gray-100);
+}
+
+.btn-block {
+  width: 100%;
+}
+
+.btn-sm {
+  padding: 8px 16px;
+  font-size: 14px;
+}
+
+.btn:disabled {
+  opacity: .4;
+  cursor: not-allowed;
+}
+
+/* ---------- FOOTER (left-aligned) ---------- */
+.site-footer {
+  border-top: 1px solid var(--tm-gray-200);
+  background: var(--tm-black-pearl);
+  color: var(--tm-white);
+  margin-top: 100px;
+}
+
+.site-footer .container {
+  padding: 48px 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+.footer-left {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 8px;
+}
+
+.footer-links a,
+.footer-links span {
+  color: #BFBFBF;
+  font-size: 13px;
+}
+
+.footer-links span {
+  font-weight: 700;
+  color: var(--tm-white);
+}
+
+.footer-social,
+.footer-apps {
+  margin-top: 16px;
+}
+
+.footer-social a,
+.footer-apps a {
+  color: #BFBFBF;
+  margin-right: 16px;
+  font-size: 13px;
+}
+
+.footer-copy {
+  grid-column: 1 / -1;
+  margin-top: 24px;
+  color: #999;
+  font-size: 13px;
+}

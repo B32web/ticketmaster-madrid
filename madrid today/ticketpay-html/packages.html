@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Choose Your Tickets | Ticketmaster</title>
+<link rel="stylesheet" href="css/base.css" />
+<link rel="stylesheet" href="css/pages.css" />
+<style>
+  .pkg-hero { padding: 40px 0 8px; }
+  .pkg-hero .eyebrow { color: #026cdf; font-weight: 800; font-size: 11px; letter-spacing: 1.6px; }
+  .pkg-hero h1 { margin: 8px 0 4px; }
+  .pkg-hero p { color: #666; margin: 0; }
+
+  /* Steps */
+  .steps { display: flex; gap: 10px; margin: 22px 0 30px; flex-wrap: wrap; }
+  .step { display: flex; align-items: center; gap: 8px; font-size: 12.5px; font-weight: 700; color: #9aa2ac; }
+  .step .num { width: 22px; height: 22px; border-radius: 50%; background: #eef1f4; display: flex; align-items: center; justify-content: center; font-size: 11px; }
+  .step.active { color: #026cdf; }
+  .step.active .num { background: #026cdf; color: #fff; }
+  .step-arrow { color: #ccc; }
+
+  /* Day tabs */
+  .day-tabs { display: flex; gap: 12px; margin-bottom: 30px; flex-wrap: wrap; }
+  .day-tab {
+    flex: 1; min-width: 180px; text-align: left; border: 2px solid #e2e6eb; border-radius: 12px;
+    background: #fff; padding: 16px 18px; cursor: pointer; transition: .15s;
+  }
+  .day-tab:hover:not(.disabled) { border-color: #aeb8c3; }
+  .day-tab.active { border-color: #026cdf; box-shadow: 0 0 0 3px rgba(2,108,223,.08); }
+  .day-tab.disabled { cursor: not-allowed; background: #f3f4f6; opacity: .6; }
+  .day-tab .d-label { font-size: 11px; font-weight: 800; letter-spacing: .6px; text-transform: uppercase; color: #9aa2ac; }
+  .day-tab.active .d-label { color: #026cdf; }
+  .day-tab .d-date { font-size: 17px; font-weight: 800; margin: 4px 0 8px; color: #17191d; }
+  .day-tab .d-avail { font-size: 12.5px; font-weight: 700; }
+  .inv-ok { color: #1f9d55; }
+  .inv-low { color: #d0281f; }
+  .inv-over { color: #d0281f; }
+  .badge-passed { display: inline-block; margin-top: 6px; background: #dfe3e8; color: #6b7280; font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 20px; letter-spacing: .4px; }
+
+  /* Package grid */
+  .pkg-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 18px; }
+  .pkg-card { border: 1px solid #e2e6eb; border-radius: 14px; padding: 20px; background: #fff; display: flex; flex-direction: column; }
+  .pkg-card h3 { margin: 0 0 4px; font-size: 17px; }
+  .pkg-card .pkg-desc { color: #777; font-size: 12.5px; margin: 0 0 10px; min-height: 32px; }
+  .pkg-perks { list-style: none; margin: 0 0 12px; padding: 0; font-size: 12px; color: #444; }
+  .pkg-perks li { padding: 3px 0 3px 18px; position: relative; }
+  .pkg-perks li::before { content: "✓"; position: absolute; left: 0; color: #026cdf; font-weight: 800; }
+  .pkg-card .pkg-price { font-size: 24px; font-weight: 900; color: #17191d; }
+  .pkg-card .pkg-price span { font-size: 12px; font-weight: 600; color: #9aa2ac; }
+  .discount-table { margin: 14px 0; border-top: 1px solid #eee; padding-top: 12px; font-size: 12px; }
+  .discount-table .row { display: flex; justify-content: space-between; padding: 3px 0; color: #555; }
+  .discount-table .row b { color: #17191d; }
+  .discount-table .row.best { color: #026cdf; font-weight: 700; }
+  .qty-row { display: flex; align-items: center; justify-content: space-between; margin: 14px 0 6px; }
+  .qty-stepper { display: flex; align-items: center; gap: 10px; }
+  .qty-stepper button { width: 30px; height: 30px; border-radius: 7px; border: 1px solid #dde1e6; background: #fff; font-size: 16px; cursor: pointer; }
+  .qty-stepper button:disabled { opacity: .35; cursor: not-allowed; }
+  .qty-stepper .qty-val { min-width: 18px; text-align: center; font-weight: 800; }
+  .pkg-total { font-size: 13px; color: #555; margin-bottom: 12px; }
+  .pkg-total b { color: #17191d; font-size: 15px; }
+  .pkg-continue { margin-top: auto; border: 0; background: #026cdf; color: #fff; padding: 12px; border-radius: 8px; font-weight: 700; font-size: 13.5px; cursor: pointer; }
+  .pkg-continue:disabled { background: #ccc; cursor: not-allowed; }
+  .pkg-group-note { font-size: 11px; color: #9aa2ac; margin-top: 8px; }
+  .pkg-group-note.inv-low, .pkg-group-note.inv-over { font-weight: 700; }
+
+  .sold-out-banner {
+    background: #fef2f2; border: 1px solid #fca5a5; color: #b91c1c; border-radius: 10px;
+    padding: 14px 18px; font-size: 13px; font-weight: 600; margin-bottom: 20px;
+  }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container">
+    <a href="index.html" class="brand">
+      <span class="tm-logo"><span class="tm-logo-mark">®</span><span>ticketmaster</span></span>
+    </a>
+    <nav class="main-nav">
+      <a href="index.html">Home</a>
+      <a href="packages.html" class="active">Buy Tickets</a>
+      <a href="tickets.html">My Tickets</a>
+    </nav>
+    <div class="header-actions">
+      <div class="lang-switch">
+        <button class="lang-btn active" data-lang="es" onclick="setLanguage('es')">ES</button>
+        <button class="lang-btn" data-lang="en" onclick="setLanguage('en')">EN</button>
+      </div>
+      <div id="header-auth-slot"></div>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="container">
+    <div class="pkg-hero">
+      <p class="eyebrow">THE WEEKND · MADRID</p>
+      <h1 class="font-display">Choose your tickets</h1>
+      <p>Pick a date, pick a package — then head to the seat map to choose your exact seats.</p>
+    </div>
+
+    <div class="steps">
+      <div class="step active"><span class="num">1</span> Pick date &amp; package</div>
+      <span class="step-arrow">→</span>
+      <div class="step"><span class="num">2</span> Choose your seats</div>
+      <span class="step-arrow">→</span>
+      <div class="step"><span class="num">3</span> Pay &amp; get your ticket</div>
+    </div>
+
+    <div id="dayTabs" class="day-tabs"></div>
+    <div id="soldOutBanner"></div>
+    <div id="pkgGrid" class="pkg-grid"></div>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-left">
+      <span class="tm-logo"><span class="tm-logo-mark">®</span><span>ticketmaster</span></span>
+      <div class="footer-links">
+        <span>Looking for Help</span>
+        <a href="#">Discover</a><a href="#">About Us</a><a href="#">Join Us</a><a href="#">Our Network</a><a href="#">Live Nation</a><a href="#">Purchase Policy</a><a href="#">Privacy Policy</a><a href="#">Cookie Policy</a><a href="#">Accessibility Statement</a><a href="#">Manage my cookies</a>
+      </div>
+    </div>
+    <div class="footer-social">
+      <span>Let's Connect</span>
+      <a href="#">Facebook</a><a href="#">X</a><a href="#">Blog</a><a href="#">Youtube</a><a href="#">Instagram</a><a href="#">LinkedIn</a><a href="#">TikTok</a>
+    </div>
+    <div class="footer-apps">
+      <span>Download Our Apps</span>
+      <a href="#">App Store</a><a href="#">Google Play</a>
+    </div>
+    <div class="footer-copy">© 1999-2026 Ticketmaster. All rights reserved.</div>
+  </div>
+</footer>
+
+<script src="js/data.js"></script>
+<script src="js/store.js"></script>
+<!-- Supabase integration scaffold — safe to load, inactive until configured (see js/supabase-client.js) -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase-client.js"></script>
+<script>
+  function setLanguage(lang) {
+    document.documentElement.lang = lang;
+    document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.lang === lang));
+    try { localStorage.setItem('tm_lang', lang); } catch (e) {}
+  }
+  setLanguage((function(){ try { return localStorage.getItem('tm_lang') || 'es'; } catch (e) { return 'es'; } })());
+
+  // "Today" in this demo is Saturday 29 Aug 2026 — Friday has already passed.
+  const TODAY_ID = "sat";
+  const PASSED_IDS = ["fri"];
+  const DAY_TAG = { fri: "Yesterday", sat: "Today", sun: "Tomorrow" };
+
+  let selectedDay = TODAY_ID;
+  const qtyByTier = {}; // tierId -> chosen quantity
+
+  function renderDayTabs() {
+    const wrap = document.getElementById("dayTabs");
+    wrap.innerHTML = "";
+    DAYS.forEach(day => {
+      const passed = PASSED_IDS.includes(day.id);
+      const inv = passed ? null : getDayInventory(day.id);
+      const el = document.createElement("button");
+      el.className = "day-tab" + (passed ? " disabled" : "") + (day.id === selectedDay ? " active" : "");
+      el.disabled = passed;
+      let availHtml;
+      if (passed) {
+        availHtml = `<span class="badge-passed">Passed · Sold out</span>`;
+      } else {
+        const d = remainingDisplay(inv.remaining, "tickets");
+        availHtml = `<span class="d-avail ${d.className}">${d.text}</span>`;
+      }
+      el.innerHTML = `
+        <div class="d-label">${DAY_TAG[day.id]}</div>
+        <div class="d-date">${day.weekday}, ${day.date}</div>
+        ${availHtml}
+      `;
+      if (!passed) {
+        el.addEventListener("click", () => { selectedDay = day.id; renderAll(); });
+      }
+      wrap.appendChild(el);
+    });
+  }
+
+  function renderSoldOutBanner() {
+    const banner = document.getElementById("soldOutBanner");
+    const inv = getDayInventory(selectedDay);
+    if (inv && inv.remaining <= 0) {
+      banner.innerHTML = `<div class="sold-out-banner">Tickets over — ${DAYS.find(d=>d.id===selectedDay).weekday} is completely sold out. Please choose another date.</div>`;
+    } else {
+      banner.innerHTML = "";
+    }
+  }
+
+  function renderPackages() {
+    const grid = document.getElementById("pkgGrid");
+    grid.innerHTML = "";
+    const inv = getDayInventory(selectedDay);
+
+    TIERS.forEach(tier => {
+      if (!(tier.id in qtyByTier)) qtyByTier[tier.id] = 1;
+      const maxQty = Math.min(6, inv.remaining);
+      let qty = Math.min(qtyByTier[tier.id], Math.max(1, maxQty));
+      qtyByTier[tier.id] = qty;
+
+      const base = BASE_PRICE[tier.id];
+      const rows = [1, 2, 3, 4, 5].map(n => {
+        const perTicket = pricePerTicketAtQty(tier.id, n);
+        const total = Math.round(perTicket * n * 100) / 100;
+        const rate = bestGroupRate(n);
+        const label = n === 5 ? "5+" : String(n);
+        return { n, label, total, rate, best: n === Math.min(qty, 5) };
+      });
+
+      const chosenPerTicket = pricePerTicketAtQty(tier.id, qty);
+      const chosenTotal = Math.round(chosenPerTicket * qty * 100) / 100;
+      const chosenDiscount = Math.round((base * qty - chosenTotal) * 100) / 100;
+
+      const willBeGroup = isGroupQty(qty);
+      const groupBlocked = willBeGroup && inv.groupRemaining <= 0;
+      const outOfStock = inv.remaining <= 0;
+      const groupInfo = remainingDisplay(inv.groupRemaining, "group tickets");
+
+      const card = document.createElement("div");
+      card.className = "pkg-card";
+      card.innerHTML = `
+        <h3>${tier.name}</h3>
+        <p class="pkg-desc">${tier.description}</p>
+        <ul class="pkg-perks">
+          ${(TIER_PERKS[tier.id] || []).map(p => `<li>${p}</li>`).join("")}
+        </ul>
+        <div class="pkg-price">€${base.toFixed(2)} <span>/ ticket</span></div>
+        <div class="discount-table">
+          ${rows.map(r => `
+            <div class="row${r.best ? ' best' : ''}">
+              <span>${r.label} ticket${r.n>1?'s':''}${r.rate>0 ? ' · '+Math.round(r.rate*100)+'% off' : ''}</span>
+              <b>€${r.total.toFixed(2)}</b>
+            </div>`).join("")}
+        </div>
+        <div class="qty-row">
+          <span>Quantity</span>
+          <div class="qty-stepper">
+            <button class="q-minus" ${qty<=1?'disabled':''}>−</button>
+            <span class="qty-val">${qty}</span>
+            <button class="q-plus" ${qty>=maxQty?'disabled':''}>+</button>
+          </div>
+        </div>
+        <div class="pkg-total">Subtotal €${(base*qty).toFixed(2)} − discount €${chosenDiscount.toFixed(2)} = <b>€${chosenTotal.toFixed(2)}</b></div>
+        <div class="pkg-group-note ${willBeGroup ? groupInfo.className : ''}">${
+          willBeGroup
+            ? (groupBlocked ? "No group tickets left for this date." : groupInfo.text + " for this date")
+            : "1 ticket = individual order, no group slot used"
+        }</div>
+        <button class="pkg-continue" ${(outOfStock || groupBlocked) ? 'disabled' : ''}>
+          ${outOfStock ? "Sold out" : groupBlocked ? "Group tickets unavailable" : "Continue to seat selection →"}
+        </button>
+      `;
+
+      card.querySelector(".q-minus").addEventListener("click", () => {
+        qtyByTier[tier.id] = Math.max(1, qtyByTier[tier.id] - 1);
+        renderPackages();
+      });
+      card.querySelector(".q-plus").addEventListener("click", () => {
+        qtyByTier[tier.id] = Math.min(maxQty, qtyByTier[tier.id] + 1);
+        renderPackages();
+      });
+      card.querySelector(".pkg-continue").addEventListener("click", () => {
+        if (outOfStock || groupBlocked) return;
+        Cart.setPackage({
+          day: selectedDay,
+          tier: tier.id,
+          tierName: tier.name,
+          qty,
+          pricePerTicket: base,
+          plannedTotal: chosenTotal
+        });
+        window.location.href = `event.html?day=${selectedDay}&tier=${tier.id}&qty=${qty}`;
+      });
+
+      grid.appendChild(card);
+    });
+  }
+
+  function renderAll() {
+    renderDayTabs();
+    renderSoldOutBanner();
+    renderPackages();
+  }
+
+  renderAll();
+</script>
+</body>
+</html>

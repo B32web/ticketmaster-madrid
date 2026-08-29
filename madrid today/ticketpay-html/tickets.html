@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>My Tickets | Ticketmaster</title>
+<link rel="stylesheet" href="css/base.css" />
+<link rel="stylesheet" href="css/pages.css" />
+<style>
+  /* Inline styles for the ticket card design */
+  .ticket-card {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 28px;
+    box-shadow: 0 4px 18px rgba(0,0,0,.05);
+  }
+  .ticket-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px;
+    border-bottom: 1px solid #e5e5e5;
+  }
+  .ticket-brand {
+    font-size: 14px;
+    font-weight: 900;
+    letter-spacing: 1px;
+    color: #026cdf;
+  }
+  .ticket-brand .tm-logo-mark {
+    font-size: 9px;
+    font-weight: 700;
+    margin-right: 2px;
+    transform: skewX(7deg);
+  }
+  .ticket-brand .tm-logo {
+    font-size: 20px;
+    font-style: italic;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    color: #026cdf;
+    transform: skewX(-7deg);
+    display: inline-flex;
+    align-items: flex-start;
+  }
+  .ticket-type {
+    background: #026cdf;
+    color: #fff;
+    padding: 8px 18px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .5px;
+    display: inline-block;
+    text-transform: uppercase;
+  }
+  .ticket-main {
+    display: grid;
+    grid-template-columns: 1fr 260px;
+    gap: 30px;
+    padding: 28px;
+  }
+  .ticket-event {
+    margin: 0 0 10px;
+    font-size: 24px;
+    line-height: 1.2;
+    font-weight: 800;
+    color: #151515;
+  }
+  .ticket-meta {
+    font-size: 15px;
+    color: #666;
+    margin-bottom: 6px;
+    font-weight: 600;
+  }
+  .seat-info-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-top: 25px;
+  }
+  .info-box {
+    padding: 15px;
+    background: #f6f6f6;
+    border-radius: 7px;
+  }
+  .info-label {
+    display: block;
+    font-size: 10px;
+    color: #777;
+    text-transform: uppercase;
+    letter-spacing: .8px;
+    font-weight: 800;
+    margin-bottom: 6px;
+  }
+  .info-value {
+    font-size: 17px;
+    font-weight: 900;
+    color: #151515;
+  }
+  .barcode-panel {
+    border-left: 1px solid #e3e3e3;
+    padding-left: 30px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  .barcode-label {
+    font-size: 11px;
+    color: #777;
+    text-transform: uppercase;
+    font-weight: 800;
+    letter-spacing: 1px;
+    margin-bottom: 15px;
+  }
+  .barcode {
+    width: 220px;
+    height: 95px;
+    display: flex;
+    align-items: stretch;
+    justify-content: center;
+    gap: 2px;
+    overflow: hidden;
+    background: white;
+    padding: 5px;
+  }
+  .barcode span {
+    height: 100%;
+    background: #111;
+    flex-shrink: 0;
+  }
+  .barcode-number {
+    margin-top: 10px;
+    font-family: monospace;
+    font-size: 12px;
+    letter-spacing: 2px;
+    color: #555;
+  }
+  .ticket-footer {
+    border-top: 1px solid #e5e5e5;
+    padding: 17px 28px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .action-left {
+    display: flex;
+    gap: 10px;
+  }
+  .action {
+    height: 40px;
+    padding: 0 17px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    background: white;
+    color: #111;
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+  }
+  .action.primary {
+    background: #111;
+    color: white;
+    border-color: #111;
+  }
+  .ticket-id {
+    color: #888;
+    font-size: 11px;
+    font-family: monospace;
+  }
+  .verified {
+    background: #edf8ef;
+    color: #22733c;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 800;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .verified::before {
+    content: "✓";
+    background: #22733c;
+    color: white;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+  }
+  @media (max-width: 760px) {
+    .ticket-main {
+      grid-template-columns: 1fr;
+    }
+    .barcode-panel {
+      border-left: 0;
+      border-top: 1px solid #e5e5e5;
+      padding-left: 0;
+      padding-top: 25px;
+    }
+    .ticket-footer {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 15px;
+    }
+    .action-left {
+      width: 100%;
+    }
+    .action {
+      flex: 1;
+    }
+  }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container">
+    <a href="index.html" class="brand">
+      <span class="tm-logo">
+        <span class="tm-logo-mark">®</span>
+        <span>ticketmaster</span>
+      </span>
+    </a>
+    <nav class="main-nav">
+      <a href="index.html">Home</a>
+      <a href="event.html">Madrid Event</a>
+      <a href="packages.html">Buy Tickets</a>
+      <a href="tickets.html" class="active">My Tickets</a>
+    </nav>
+    <div class="header-actions">
+      <div class="lang-switch">
+        <button class="lang-btn" data-lang="es" onclick="setLanguage('es')"><span class="flag-icon">🇪🇸</span> ES</button>
+        <button class="lang-btn active" data-lang="en" onclick="setLanguage('en')"><span class="flag-icon">🇬🇧</span> EN</button>
+      </div>
+      <div class="header-user">franklin odhiambo otieno</div>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="dash-header">
+    <div class="container">
+      <p class="eyebrow">DIGITAL TICKETS</p>
+      <h1 class="font-display">My Tickets</h1>
+    </div>
+  </div>
+
+  <div class="container" style="padding:40px 0 100px;">
+    <div id="tickets-list"></div>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-left">
+      <span class="tm-logo"><span class="tm-logo-mark">®</span><span>ticketmaster</span></span>
+      <div class="footer-links">
+        <span>Looking for Help</span>
+        <a href="#">Discover</a>
+        <a href="#">About Us</a>
+        <a href="#">Join Us</a>
+        <a href="#">Our Network</a>
+        <a href="#">Live Nation</a>
+        <a href="#">Purchase Policy</a>
+        <a href="#">Privacy Policy</a>
+        <a href="#">Cookie Policy</a>
+        <a href="#">Accessibility Statement</a>
+        <a href="#">Manage my cookies</a>
+      </div>
+    </div>
+    <div class="footer-social">
+      <span>Let's Connect</span>
+      <a href="#">Facebook</a><a href="#">X</a><a href="#">Blog</a><a href="#">Youtube</a><a href="#">Instagram</a><a href="#">LinkedIn</a><a href="#">TikTok</a>
+    </div>
+    <div class="footer-apps">
+      <span>Download Our Apps</span>
+      <a href="#">App Store</a><a href="#">Google Play</a>
+    </div>
+    <div class="footer-copy">© 1999-2026 Ticketmaster. All rights reserved.</div>
+  </div>
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<script src="js/data.js"></script>
+<script src="js/store.js"></script>
+<!-- Supabase integration scaffold — safe to load, inactive until configured (see js/supabase-client.js) -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase-client.js"></script>
+<script>
+  // Language switcher
+  function setLanguage(lang) {
+    document.documentElement.lang = lang;
+    document.querySelectorAll('.lang-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.lang === lang);
+    });
+    try { localStorage.setItem('tm_lang', lang); } catch (e) {}
+  }
+  const savedLang = (function(){ try { return localStorage.getItem('tm_lang') || 'es'; } catch (e) { return 'es'; } })();
+  setLanguage(savedLang);
+
+  // Generate barcode bars (visual placeholder)
+  function generateBarcode() {
+    let bars = '';
+    for (let i = 0; i < 50; i++) {
+      const width = Math.floor(Math.random() * 3) + 1;
+      bars += '<span style="width:' + width + 'px;"></span>';
+    }
+    return '<div class="barcode">' + bars + '</div>';
+  }
+
+  // Render tickets
+  const orders = Orders.all();
+  const list = document.getElementById("tickets-list");
+
+  if (orders.length === 0) {
+    list.innerHTML = `
+      <div class="empty-state">
+        <h3>No tickets yet</h3>
+        <p>Purchase tickets on the Madrid event page to see them here.</p>
+        <div style="margin-top:18px;"><a href="event.html" class="btn btn-primary btn-sm">Browse Madrid tickets</a></div>
+      </div>`;
+  } else {
+    let html = '';
+    orders.forEach(order => {
+      order.lines.forEach(line => {
+        const day = DAYS.find(d => d.id === line.day) || { weekday: "Saturday", date: "29 Ago 2026" };
+        const tierBadge = line.tierLabel || "TICKET";
+
+        const seatInfoHtml = line.isGroup
+          ? `
+                <div class="info-box" style="grid-column: 1 / -1;">
+                  <span class="info-label">Group ticket · ${line.groupSize} seats</span>
+                  <span class="info-value" style="font-size:13px; line-height:1.6; font-weight:700;">
+                    ${line.seats.map(s => `${s.sectionName} · Row ${s.row} · Seat ${s.seatNumber}`).join('<br>')}
+                  </span>
+                </div>`
+          : `
+                <div class="info-box">
+                  <span class="info-label">Section</span>
+                  <span class="info-value">${line.sectionName || line.tier.toUpperCase()}</span>
+                </div>
+                <div class="info-box">
+                  <span class="info-label">Row</span>
+                  <span class="info-value">${line.row}</span>
+                </div>
+                <div class="info-box">
+                  <span class="info-label">Seat</span>
+                  <span class="info-value">${line.seatNumber}</span>
+                </div>`;
+
+        html += `
+          <div class="ticket-card animate-rise">
+            <div class="ticket-header">
+              <div class="ticket-brand">
+                <span class="tm-logo"><span class="tm-logo-mark">®</span><span>ticketmaster</span></span>
+              </div>
+              <span class="ticket-type">${tierBadge.toUpperCase()}${line.isGroup ? " · GROUP" : ""}</span>
+              <span class="verified">Verified</span>
+            </div>
+            <div class="ticket-main">
+              <div>
+                <h2 class="ticket-event">THE WEEKND · AFTER HOURS TIL DAWN</h2>
+                <p class="ticket-meta">${day.weekday}, ${day.date} · Riyadh Air Metropolitano</p>
+                <div class="seat-info-grid">
+                  ${seatInfoHtml}
+                </div>
+              </div>
+              <div class="barcode-panel">
+                <div class="barcode-label">Scan at entrance</div>
+                ${generateBarcode()}
+                <div class="barcode-number">${line.code}</div>
+              </div>
+            </div>
+            <div class="ticket-footer">
+              <div class="action-left">
+                <button class="action primary" onclick="addToWallet('${line.code}')">Add to Wallet</button>
+                <button class="action" onclick="showDetails('${line.code}')">Details</button>
+                <button class="action" onclick="transferTicket('${line.code}')">Transfer</button>
+              </div>
+              <div class="ticket-id">Ticket ID: ${line.code}${line.price ? " · €" + line.price.toFixed(2) : ""}</div>
+            </div>
+          </div>`;
+      });
+    });
+    list.innerHTML = html;
+  }
+
+  // Actions
+  function addToWallet(code) {
+    document.getElementById('toast').textContent = "Ticket " + code + " added to Apple Wallet / Google Pay";
+    document.getElementById('toast').classList.add('show');
+    setTimeout(() => document.getElementById('toast').classList.remove('show'), 3000);
+  }
+
+  function showDetails(code) {
+    document.getElementById('toast').textContent = "Ticket details: Order " + code;
+    document.getElementById('toast').classList.add('show');
+    setTimeout(() => document.getElementById('toast').classList.remove('show'), 3000);
+  }
+
+  function transferTicket(code) {
+    document.getElementById('toast').textContent = "Transfer options for ticket " + code;
+    document.getElementById('toast').classList.add('show');
+    setTimeout(() => document.getElementById('toast').classList.remove('show'), 3000);
+  }
+
+  // Check for new order
+  const params = new URLSearchParams(window.location.search);
+  if (params.get("new")) {
+    document.getElementById('toast').textContent = "Payment confirmed — your tickets are ready!";
+    document.getElementById('toast').classList.add('show');
+    setTimeout(() => document.getElementById('toast').classList.remove('show'), 3500);
+  }
+</script>
+</body>
+</html>

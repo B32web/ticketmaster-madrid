@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Create account | Ticketmaster</title>
+<link rel="stylesheet" href="css/base.css" />
+<link rel="stylesheet" href="css/pages.css" />
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container">
+    <a href="index.html" class="brand">
+      <span class="tm-logo">
+        <span class="tm-logo-mark">®</span>
+        <span>ticketmaster</span>
+      </span>
+    </a>
+    <nav class="main-nav">
+      <a href="index.html">Home</a>
+      <a href="event.html">Madrid Event</a>
+      <a href="packages.html">Buy Tickets</a>
+      <a href="tickets.html">My Tickets</a>
+    </nav>
+    <div class="header-actions">
+      <div class="lang-switch">
+        <button class="lang-btn" data-lang="es" onclick="setLanguage('es')"><span class="flag-icon">🇪🇸</span> ES</button>
+        <button class="lang-btn active" data-lang="en" onclick="setLanguage('en')"><span class="flag-icon">🇬🇧</span> EN</button>
+      </div>
+      <div id="header-auth-slot"></div>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="auth-shell">
+    <div class="auth-card animate-rise">
+      <p class="eyebrow auth-eyebrow">JOIN TICKETMASTER</p>
+      <h1 class="font-display">Create account</h1>
+      <p class="auth-sub">Save your details for faster checkout.</p>
+
+      <div class="form-error" id="form-error"></div>
+
+      <form id="signup-form">
+        <div class="field">
+          <label for="name">Full name</label>
+          <input type="text" id="name" required placeholder="Jane Doe" />
+        </div>
+        <div class="field">
+          <label for="email">Email</label>
+          <input type="email" id="email" required placeholder="you@example.com" />
+        </div>
+        <div class="field">
+          <label for="password">Password</label>
+          <input type="password" id="password" required placeholder="At least 6 characters" minlength="6" />
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">Create account</button>
+      </form>
+
+      <p class="auth-foot">Already have an account? <a href="login.html">Log in</a></p>
+    </div>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-left">
+      <span class="tm-logo"><span class="tm-logo-mark">®</span><span>ticketmaster</span></span>
+      <div class="footer-links">
+        <span>Looking for Help</span>
+        <a href="#">Discover</a>
+        <a href="#">About Us</a>
+        <a href="#">Join Us</a>
+        <a href="#">Our Network</a>
+        <a href="#">Live Nation</a>
+        <a href="#">Purchase Policy</a>
+        <a href="#">Privacy Policy</a>
+        <a href="#">Cookie Policy</a>
+        <a href="#">Accessibility Statement</a>
+        <a href="#">Manage my cookies</a>
+      </div>
+    </div>
+    <div class="footer-social">
+      <span>Let's Connect</span>
+      <a href="#">Facebook</a><a href="#">X</a><a href="#">Blog</a><a href="#">Youtube</a><a href="#">Instagram</a><a href="#">LinkedIn</a><a href="#">TikTok</a>
+    </div>
+    <div class="footer-apps">
+      <span>Download Our Apps</span>
+      <a href="#">App Store</a><a href="#">Google Play</a>
+    </div>
+    <div class="footer-copy">© 1999-2026 Ticketmaster. All rights reserved.</div>
+  </div>
+</footer>
+
+<script src="js/data.js"></script>
+<script src="js/store.js"></script>
+<!-- Supabase integration scaffold — safe to load, inactive until configured (see js/supabase-client.js) -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase-client.js"></script>
+<script>
+  // Language switcher
+  function setLanguage(lang) {
+    document.documentElement.lang = lang;
+    document.querySelectorAll('.lang-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.lang === lang);
+    });
+    try { localStorage.setItem('tm_lang', lang); } catch (e) {}
+  }
+  const savedLang = (function(){ try { return localStorage.getItem('tm_lang') || 'en'; } catch (e) { return 'en'; } })();
+  setLanguage(savedLang);
+
+  document.getElementById("signup-form").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const name = document.getElementById("name").value.trim();
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value;
+    const errorBox = document.getElementById("form-error");
+
+    if (!name || !email || password.length < 6) {
+      errorBox.textContent = "Fill in your name, a valid email, and a password of at least 6 characters.";
+      errorBox.classList.add("show");
+      return;
+    }
+    errorBox.classList.remove("show");
+    Auth.signUp(name, email);
+    window.location.href = "account.html";
+  });
+</script>
+</body>
+</html>
