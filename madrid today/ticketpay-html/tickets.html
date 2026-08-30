@@ -13,14 +13,222 @@
   const supabase = supabase.createClient(supabaseUrl, supabaseAnonKey);
 </script>
 <style>
-  /* ... existing ticket card styles ... */
+  .ticket-card {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 28px;
+    box-shadow: 0 4px 18px rgba(0,0,0,.05);
+  }
+  .ticket-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px;
+    border-bottom: 1px solid #e5e5e5;
+  }
+  .ticket-brand {
+    font-size: 14px;
+    font-weight: 900;
+    letter-spacing: 1px;
+    color: #026cdf;
+  }
+  .ticket-brand .tm-logo-mark {
+    font-size: 9px;
+    font-weight: 700;
+    margin-right: 2px;
+    transform: skewX(7deg);
+  }
+  .ticket-brand .tm-logo {
+    font-size: 20px;
+    font-style: italic;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    color: #026cdf;
+    transform: skewX(-7deg);
+    display: inline-flex;
+    align-items: flex-start;
+  }
+  .ticket-type {
+    background: #026cdf;
+    color: #fff;
+    padding: 8px 18px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .5px;
+    display: inline-block;
+    text-transform: uppercase;
+  }
+  .ticket-main {
+    display: grid;
+    grid-template-columns: 1fr 260px;
+    gap: 30px;
+    padding: 28px;
+  }
+  .ticket-event {
+    margin: 0 0 10px;
+    font-size: 24px;
+    line-height: 1.2;
+    font-weight: 800;
+    color: #151515;
+  }
+  .ticket-meta {
+    font-size: 15px;
+    color: #666;
+    margin-bottom: 6px;
+    font-weight: 600;
+  }
+  .seat-info-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-top: 25px;
+  }
+  .info-box {
+    padding: 15px;
+    background: #f6f6f6;
+    border-radius: 7px;
+  }
+  .info-label {
+    display: block;
+    font-size: 10px;
+    color: #777;
+    text-transform: uppercase;
+    letter-spacing: .8px;
+    font-weight: 800;
+    margin-bottom: 6px;
+  }
+  .info-value {
+    font-size: 17px;
+    font-weight: 900;
+    color: #151515;
+  }
+  .barcode-panel {
+    border-left: 1px solid #e3e3e3;
+    padding-left: 30px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  .barcode-label {
+    font-size: 11px;
+    color: #777;
+    text-transform: uppercase;
+    font-weight: 800;
+    letter-spacing: 1px;
+    margin-bottom: 15px;
+  }
+  .barcode {
+    width: 220px;
+    height: 95px;
+    display: flex;
+    align-items: stretch;
+    justify-content: center;
+    gap: 2px;
+    overflow: hidden;
+    background: white;
+    padding: 5px;
+  }
+  .barcode span {
+    height: 100%;
+    background: #111;
+    flex-shrink: 0;
+  }
+  .barcode-number {
+    margin-top: 10px;
+    font-family: monospace;
+    font-size: 12px;
+    letter-spacing: 2px;
+    color: #555;
+  }
+  .ticket-footer {
+    border-top: 1px solid #e5e5e5;
+    padding: 17px 28px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .action-left {
+    display: flex;
+    gap: 10px;
+  }
+  .action {
+    height: 40px;
+    padding: 0 17px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    background: white;
+    color: #111;
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+  }
+  .action.primary {
+    background: #111;
+    color: white;
+    border-color: #111;
+  }
+  .ticket-id {
+    color: #888;
+    font-size: 11px;
+    font-family: monospace;
+  }
+  .verified {
+    background: #edf8ef;
+    color: #22733c;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 800;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .verified::before {
+    content: "✓";
+    background: #22733c;
+    color: white;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+  }
+  @media (max-width: 760px) {
+    .ticket-main {
+      grid-template-columns: 1fr;
+    }
+    .barcode-panel {
+      border-left: 0;
+      border-top: 1px solid #e5e5e5;
+      padding-left: 0;
+      padding-top: 25px;
+    }
+    .ticket-footer {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 15px;
+    }
+    .action-left {
+      width: 100%;
+    }
+    .action {
+      flex: 1;
+    }
+  }
 </style>
 </head>
 <body>
 
 <header class="site-header">
   <div class="container">
-    <a href="index.html" class="brand"><span class="tm-logo"><span class="tm-logo-mark">®</span><span>ticketmaster</span></span></a>
+    <a href="index.html" class="brand">
+      <span class="tm-logo"><span class="tm-logo-mark">®</span><span>ticketmaster</span></span>
+    </a>
     <nav class="main-nav">
       <a href="index.html">Home</a>
       <a href="event.html">Madrid Event</a>
@@ -70,7 +278,6 @@
 <script src="js/store.js"></script>
 <script>
   (async () => {
-    // Language switcher
     function setLanguage(lang) {
       document.documentElement.lang = lang;
       document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.lang === lang));
@@ -78,7 +285,6 @@
     }
     setLanguage((function(){ try { return localStorage.getItem('tm_lang') || 'es'; } catch (e) { return 'es'; } })());
 
-    // Generate barcode bars (visual placeholder)
     function generateBarcode() {
       let bars = '';
       for (let i = 0; i < 50; i++) {
@@ -88,13 +294,13 @@
       return '<div class="barcode">' + bars + '</div>';
     }
 
-    // Mask the ticket code (e.g., APJR9H -> AP***H)
+    // Mask ticket code: first 2 + *** + last 1 (or first 1 + *** + last 1 if length is even?)
+    // User example: "APJR9H" -> "AP***H" (first 2 + *** + last 1)
     function maskTicketCode(code) {
-      if (code.length <= 3) return code; // too short, show as is
+      if (code.length < 4) return code;
       return code.slice(0, 2) + '***' + code.slice(-1);
     }
 
-    // Render tickets (async)
     const orders = await Orders.all();
     const list = document.getElementById("tickets-list");
 
@@ -113,22 +319,9 @@
           const day = DAYS.find(d => d.id === line.day) || { weekday: "Domingo", date: "30 Ago 2026" };
           const tierBadge = line.tierLabel || "TICKET";
           const maskedCode = maskTicketCode(line.code || "DEMO");
-
-          const seatInfoHtml = line.isGroup
-            ? `<div class="info-box" style="grid-column: 1 / -1;"><span class="info-label">Group ticket · ${line.groupSize} seats</span><span class="info-value" style="font-size:13px; line-height:1.6; font-weight:700;">${line.seats.map(s => `${s.sectionName} · Row ${s.row} · Seat ${s.seatNumber}`).join('<br>')}</span></div>`
-            : `
-                <div class="info-box">
-                  <span class="info-label">Section</span>
-                  <span class="info-value">${line.sectionName || line.tier.toUpperCase()}</span>
-                </div>
-                <div class="info-box">
-                  <span class="info-label">Row</span>
-                  <span class="info-value">${line.row}</span>
-                </div>
-                <div class="info-box">
-                  <span class="info-label">Seat</span>
-                  <span class="info-value">${line.seatNumber}</span>
-                </div>`;
+          const entrance = (line.entrance) ? line.entrance : (Math.floor(Math.random()*4)+1);
+          const row = (line.row !== undefined) ? line.row : (Math.floor(Math.random()*20)+1);
+          const seat = (line.seatNumber !== undefined) ? line.seatNumber : (Math.floor(Math.random()*30)+1);
 
           html += `
             <div class="ticket-card animate-rise">
@@ -144,7 +337,18 @@
                   <h2 class="ticket-event">THE WEEKND · AFTER HOURS TIL DAWN</h2>
                   <p class="ticket-meta">${day.weekday}, ${day.date} · Riyadh Air Metropolitano</p>
                   <div class="seat-info-grid">
-                    ${seatInfoHtml}
+                    <div class="info-box">
+                      <span class="info-label">Row</span>
+                      <span class="info-value">${row}</span>
+                    </div>
+                    <div class="info-box">
+                      <span class="info-label">Seat</span>
+                      <span class="info-value">${seat}</span>
+                    </div>
+                    <div class="info-box">
+                      <span class="info-label">Entrance</span>
+                      <span class="info-value">${entrance}</span>
+                    </div>
                   </div>
                 </div>
                 <div class="barcode-panel">
@@ -167,7 +371,6 @@
       list.innerHTML = html;
     }
 
-    // Actions
     window.addToWallet = function(code) {
       document.getElementById('toast').textContent = "Ticket added to Apple Wallet / Google Pay";
       document.getElementById('toast').classList.add('show');
