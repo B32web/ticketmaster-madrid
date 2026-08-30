@@ -4,15 +4,225 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Log in | Ticketmaster</title>
-<link rel="stylesheet" href="css/base.css" />
-<link rel="stylesheet" href="css/pages.css" />
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<!--
-  FIX: this used to also declare `supabaseUrl` / `supabaseAnonKey` / `supabase`
-  here with `const`, duplicating js/store.js's own declarations — that
-  duplicate `const` throws a SyntaxError that stops every script after it
-  from running. store.js already sets this up, so this page just loads the SDK.
--->
+<style>
+  :root {
+    --tm-blue: #026cdf;
+    --tm-blue-dark: #0154a8;
+    --tm-ink: #151515;
+    --tm-border: #e3e5e8;
+    --tm-bg: #f5f6f8;
+    --tm-muted: #6b7280;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background: var(--tm-bg);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: var(--tm-ink);
+  }
+
+  /* ---------- Header ---------- */
+  .site-header {
+    background: #fff;
+    border-bottom: 1px solid var(--tm-border);
+  }
+  .site-header .container {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .brand { text-decoration: none; }
+  .tm-logo {
+    font-size: 19px;
+    font-style: italic;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    color: var(--tm-blue);
+    transform: skewX(-7deg);
+    display: inline-flex;
+    align-items: flex-start;
+  }
+  .tm-logo-mark {
+    font-size: 9px;
+    font-weight: 700;
+    margin-right: 2px;
+    transform: skewX(7deg);
+  }
+  .main-nav {
+    display: flex;
+    gap: 18px;
+    flex-wrap: wrap;
+  }
+  .main-nav a {
+    color: var(--tm-ink);
+    text-decoration: none;
+    font-size: 13.5px;
+    font-weight: 600;
+  }
+  .main-nav a:hover { color: var(--tm-blue); }
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+  .lang-switch { display: flex; gap: 6px; }
+  .lang-btn {
+    border: 1px solid var(--tm-border);
+    background: #fff;
+    border-radius: 20px;
+    padding: 6px 10px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    color: var(--tm-muted);
+  }
+  .lang-btn.active { background: var(--tm-blue); color: #fff; border-color: var(--tm-blue); }
+  #header-auth-slot { display: flex; align-items: center; gap: 10px; }
+  #header-auth-slot .header-user {
+    font-size: 13.5px;
+    font-weight: 700;
+    color: var(--tm-ink);
+    background: var(--tm-bg);
+    padding: 8px 14px;
+    border-radius: 20px;
+    border: 1px solid var(--tm-border);
+    text-decoration: none;
+  }
+  #header-auth-slot .header-login {
+    font-size: 13.5px;
+    font-weight: 700;
+    color: var(--tm-ink);
+    text-decoration: none;
+  }
+  #header-auth-slot .btn.btn-light.btn-sm {
+    font-size: 13px;
+    font-weight: 700;
+    color: #fff;
+    background: var(--tm-blue);
+    padding: 8px 14px;
+    border-radius: 20px;
+    text-decoration: none;
+  }
+
+  /* ---------- Auth card (in normal page flow — no overlay/modal) ---------- */
+  main {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: clamp(24px, 6vw, 60px) 16px;
+  }
+  .auth-card {
+    width: 100%;
+    max-width: 420px;
+    background: #fff;
+    border: 1px solid var(--tm-border);
+    border-radius: 16px;
+    padding: clamp(24px, 5vw, 36px);
+    box-shadow: 0 10px 30px rgba(20, 30, 50, .06);
+  }
+  .auth-eyebrow {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    color: var(--tm-blue);
+    text-transform: uppercase;
+    margin: 0 0 8px;
+  }
+  .auth-card h1 {
+    margin: 0 0 6px;
+    font-size: clamp(22px, 5vw, 26px);
+    font-weight: 800;
+  }
+  .auth-sub {
+    margin: 0 0 22px;
+    font-size: 14px;
+    color: var(--tm-muted);
+    line-height: 1.5;
+  }
+  .field { margin-bottom: 16px; }
+  .field label {
+    display: block;
+    font-size: 12.5px;
+    font-weight: 700;
+    color: var(--tm-ink);
+    margin-bottom: 6px;
+  }
+  .field input {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1.5px solid var(--tm-border);
+    border-radius: 9px;
+    font-size: 15px;
+    font-family: inherit;
+    color: var(--tm-ink);
+    background: #fff;
+    transition: border-color .15s ease;
+  }
+  .field input:focus {
+    outline: none;
+    border-color: var(--tm-blue);
+  }
+  .btn-block {
+    width: 100%;
+    padding: 13px;
+    border: none;
+    border-radius: 10px;
+    background: var(--tm-blue);
+    color: #fff;
+    font-size: 15px;
+    font-weight: 800;
+    cursor: pointer;
+    margin-top: 4px;
+    transition: background .15s ease;
+  }
+  .btn-block:hover { background: var(--tm-blue-dark); }
+  .auth-foot {
+    text-align: center;
+    margin: 20px 0 0;
+    font-size: 13.5px;
+    color: var(--tm-muted);
+  }
+  .auth-foot a {
+    color: var(--tm-blue);
+    font-weight: 700;
+    text-decoration: none;
+  }
+  .auth-foot a:hover { text-decoration: underline; }
+
+  /* ---------- Footer ---------- */
+  .site-footer {
+    background: #111;
+    color: #ccc;
+    padding: 32px 0;
+    font-size: 12.5px;
+  }
+  .site-footer .container {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 0 20px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: space-between;
+  }
+  .site-footer a { color: #ccc; text-decoration: none; margin-right: 12px; }
+  .site-footer a:hover { color: #fff; }
+  .footer-copy { width: 100%; margin-top: 16px; color: #777; font-size: 11.5px; }
+
+  @media (max-width: 480px) {
+    .main-nav { display: none; }
+  }
+</style>
 </head>
 <body>
 
@@ -27,8 +237,8 @@
     </nav>
     <div class="header-actions">
       <div class="lang-switch">
-        <button class="lang-btn" data-lang="es" onclick="setLanguage('es')"><span class="flag-icon">🇪🇸</span> ES</button>
-        <button class="lang-btn active" data-lang="en" onclick="setLanguage('en')"><span class="flag-icon">🇬🇧</span> EN</button>
+        <button class="lang-btn" data-lang="es" onclick="setLanguage('es')" type="button">ES</button>
+        <button class="lang-btn active" data-lang="en" onclick="setLanguage('en')" type="button">EN</button>
       </div>
       <div id="header-auth-slot"></div>
     </div>
@@ -36,25 +246,26 @@
 </header>
 
 <main>
-  <div class="auth-shell">
-    <div class="auth-card animate-rise">
-      <p class="eyebrow auth-eyebrow">WELCOME BACK</p>
-      <h1 class="font-display">Log in</h1>
-      <p class="auth-sub" id="auth-sub">Access your tickets and order history.</p>
-      <div class="form-error" id="form-error"></div>
-      <form id="login-form">
-        <div class="field">
-          <label for="email">Email</label>
-          <input type="email" id="email" required placeholder="you@example.com" />
-        </div>
-        <div class="field">
-          <label for="password">Password</label>
-          <input type="password" id="password" required placeholder="••••••••" minlength="6" />
-        </div>
-        <button type="submit" class="btn btn-primary btn-block">Log in</button>
-      </form>
-      <p class="auth-foot">Don't have an account? <a href="signup.html" id="signup-link">Sign up</a></p>
-    </div>
+  <div class="auth-card">
+    <p class="auth-eyebrow">WELCOME BACK</p>
+    <h1>Log in</h1>
+    <p class="auth-sub" id="auth-sub">Log in to see your personal ticket dashboard.</p>
+    <form id="login-form">
+      <div class="field">
+        <label for="name">Full name</label>
+        <input type="text" id="name" placeholder="Jane Doe" />
+      </div>
+      <div class="field">
+        <label for="email">Email</label>
+        <input type="email" id="email" placeholder="you@example.com" />
+      </div>
+      <div class="field">
+        <label for="password">Password</label>
+        <input type="password" id="password" placeholder="Anything works" />
+      </div>
+      <button type="submit" class="btn-block">Log in</button>
+    </form>
+    <p class="auth-foot">New here? <a href="signup.html" id="signup-link">Create an account</a></p>
   </div>
 </main>
 
@@ -62,13 +273,10 @@
   <div class="container">
     <div class="footer-left">
       <span class="tm-logo"><span class="tm-logo-mark">®</span><span>ticketmaster</span></span>
-      <div class="footer-links">
-        <span>Looking for Help</span>
-        <a href="#">Discover</a><a href="#">About Us</a><a href="#">Join Us</a><a href="#">Our Network</a><a href="#">Live Nation</a><a href="#">Purchase Policy</a><a href="#">Privacy Policy</a><a href="#">Cookie Policy</a><a href="#">Accessibility Statement</a><a href="#">Manage my cookies</a>
-      </div>
     </div>
-    <div class="footer-social"><span>Let's Connect</span><a href="#">Facebook</a><a href="#">X</a><a href="#">Blog</a><a href="#">Youtube</a><a href="#">Instagram</a><a href="#">LinkedIn</a><a href="#">TikTok</a></div>
-    <div class="footer-apps"><span>Download Apps</span><a href="#">App Store</a><a href="#">Google Play</a></div>
+    <div class="footer-links">
+      <a href="#">Purchase Policy</a><a href="#">Privacy Policy</a><a href="#">Cookie Policy</a>
+    </div>
     <div class="footer-copy">© 1999-2026 Ticketmaster. All rights reserved.</div>
   </div>
 </footer>
@@ -84,9 +292,8 @@
   const savedLang = (function(){ try { return localStorage.getItem('tm_lang') || 'en'; } catch (e) { return 'en'; } })();
   setLanguage(savedLang);
 
-  // FIX (requested): honor a ?redirect= param so someone sent here from
-  // checkout (because they weren't logged in) lands back on checkout after
-  // logging in, instead of always going to account.html.
+  // Honor a ?redirect= param so someone sent here from checkout lands back
+  // on checkout right after creating their account.
   const redirectParams = new URLSearchParams(window.location.search);
   const redirectTarget = redirectParams.get('redirect') || 'account.html';
   if (redirectParams.get('redirect')) {
@@ -94,25 +301,15 @@
     document.getElementById('signup-link').href = 'signup.html?redirect=' + encodeURIComponent(redirectTarget);
   }
 
+  // No validation, no waiting: whatever's typed, this signs you in
+  // immediately (see js/store.js — this isn't meant to gatekeep, just to
+  // know who to greet you as).
   document.getElementById("login-form").addEventListener("submit", async (e) => {
     e.preventDefault();
-    const email = document.getElementById("email").value.trim();
+    const name = document.getElementById("name").value;
+    const email = document.getElementById("email").value;
     const password = document.getElementById("password").value;
-    const errorBox = document.getElementById("form-error");
-
-    if (!email || password.length < 6) {
-      errorBox.textContent = "Enter a valid email and a password of at least 6 characters.";
-      errorBox.classList.add("show");
-      return;
-    }
-    errorBox.classList.remove("show");
-
-    const { data, error } = await Auth.signIn(email, password);
-    if (error) {
-      errorBox.textContent = error.message;
-      errorBox.classList.add("show");
-      return;
-    }
+    await Auth.signIn(name, email, password);
     window.location.href = redirectTarget;
   });
 </script>
