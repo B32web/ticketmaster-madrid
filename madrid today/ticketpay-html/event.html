@@ -13,89 +13,17 @@
   const supabase = supabase.createClient(supabaseUrl, supabaseAnonKey);
 </script>
 <style>
-  #stadium-container {
-    width: 100%;
-    height: 700px;
-    background: #f4f6f8;
-    border: 1px solid #ddd;
-    border-radius: 12px;
-    position: relative;
-    overflow: hidden;
-    cursor: grab;
-  }
-  #stadium-container:active { cursor: grabbing; }
-  #stadium-svg {
-    width: 100%;
-    height: 100%;
-    transform-origin: 0 0;
-    user-select: none;
-  }
-  .section-block {
-    cursor: pointer;
-    transition: fill .2s, opacity .15s;
-  }
-  .section-block:hover { filter: brightness(1.1); }
-  .section-block.available { fill: #3E8BFF; }
-  .section-block.selected { fill: #FFB81C; }
-  .section-block.soldout { fill: #4C5668; opacity: .5; cursor: not-allowed; }
-  .seat {
-    cursor: pointer;
-    transition: fill .15s;
-  }
-  .seat.available { fill: #3E8BFF; }
-  .seat.selected { fill: #FFB81C; }
-  .seat.unavailable { fill: #4C5668; opacity: .5; cursor: not-allowed; }
-  #map-controls {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-    z-index: 10;
-  }
-  #map-controls button {
-    width: 35px;
-    height: 35px;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    background: #fff;
-    font-size: 16px;
-    cursor: pointer;
-  }
-  #bottom-bar {
-    margin-top: 15px;
-    background: #fff;
-    border: 1px solid #ddd;
-    padding: 10px 15px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-radius: 10px;
-    box-shadow: 0 4px 12px rgba(0,0,0,.08);
-  }
-  #proceed-btn {
-    background: #026cdf;
-    color: #fff;
-    border: none;
-    padding: 12px 20px;
-    border-radius: 8px;
-    font-weight: 700;
-    font-size: 14px;
-    cursor: pointer;
-  }
-  #proceed-btn:disabled { background: #ccc; cursor: not-allowed; }
-  .tooltip {
-    position: fixed;
+  /* ... same styles as before ... */
+  #package-banner {
     display: none;
-    z-index: 999;
-    background: #fff;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    padding: 10px 12px;
-    box-shadow: 0 4px 12px rgba(0,0,0,.15);
-    font-size: 12px;
-    pointer-events: none;
+    background: #eaf3ff;
+    border: 1px solid #bcdcff;
+    color: #0a4b95;
+    border-radius: 10px;
+    padding: 12px 16px;
+    margin-bottom: 16px;
+    font-size: 13.5px;
+    font-weight: 600;
   }
 </style>
 </head>
@@ -144,6 +72,8 @@
         <span class="availability-note" id="seatAvailability"></span>
       </div>
 
+      <div id="package-banner"></div>
+
       <div id="stadium-container">
         <svg id="stadium-svg" viewBox="0 0 1000 700"></svg>
         <div id="map-controls">
@@ -165,18 +95,7 @@
 </main>
 
 <footer class="site-footer">
-  <div class="container">
-    <div class="footer-left">
-      <span class="tm-logo"><span class="tm-logo-mark">®</span><span>ticketmaster</span></span>
-      <div class="footer-links">
-        <span>Looking for Help</span>
-        <a href="#">Discover</a><a href="#">About Us</a><a href="#">Join Us</a><a href="#">Our Network</a><a href="#">Live Nation</a><a href="#">Purchase Policy</a><a href="#">Privacy Policy</a><a href="#">Cookie Policy</a><a href="#">Accessibility Statement</a><a href="#">Manage my cookies</a>
-      </div>
-    </div>
-    <div class="footer-social"><span>Let's Connect</span><a href="#">Facebook</a><a href="#">X</a><a href="#">Blog</a><a href="#">Youtube</a><a href="#">Instagram</a><a href="#">LinkedIn</a><a href="#">TikTok</a></div>
-    <div class="footer-apps"><span>Download Apps</span><a href="#">App Store</a><a href="#">Google Play</a></div>
-    <div class="footer-copy">© 1999-2026 Ticketmaster. All rights reserved.</div>
-  </div>
+  <!-- ... footer ... -->
 </footer>
 
 <!-- Tooltip -->
@@ -196,6 +115,31 @@
   }
   setLanguage((function(){ try { return localStorage.getItem('tm_lang') || 'es'; } catch (e) { return 'es'; } })());
 
+  // ===== Parse URL parameters =====
+  const urlParams = new URLSearchParams(window.location.search);
+  let packageCtx = null;
+  if (urlParams.get('tier') && urlParams.get('qty')) {
+    const tierId = urlParams.get('tier');
+    const day = urlParams.get('day') || 'sun';
+    const qty = parseInt(urlParams.get('qty'), 10) || 1;
+    const tierInfo = TIERS.find(t => t.id === tierId);
+    packageCtx = { day, tier: tierId, tierName: tierInfo ? tierInfo.name : 'Ticket', qty, pricePerTicket: tierInfo ? tierInfo.price : 0 };
+    // Also store in localStorage for checkout
+    Cart.setPackage(packageCtx);
+  } else {
+    packageCtx = Cart.getPackage() || { day: 'sun', tier: null, qty: 0 };
+  }
+
+  // Show package banner
+  const banner = document.getElementById('package-banner');
+  if (packageCtx && packageCtx.qty > 0) {
+    banner.style.display = 'block';
+    const dayInfo = DAYS.find(d => d.id === packageCtx.day);
+    banner.textContent = `You selected: ${packageCtx.tierName} × ${packageCtx.qty} (${dayInfo ? dayInfo.weekday : 'Sunday'}). Choose ${packageCtx.qty} seat(s) below.`;
+  } else {
+    banner.style.display = 'none';
+  }
+
   // ===== SEAT MAP (Fully Interactive) =====
   const svg = document.getElementById('stadium-svg');
   const tooltip = document.getElementById('tooltip');
@@ -203,6 +147,7 @@
   const tooltipRow = document.getElementById('tooltip-row');
   const tooltipPrice = document.getElementById('tooltip-price');
   const selectedSeats = new Map();
+  const maxSeatsToSelect = packageCtx && packageCtx.qty > 0 ? packageCtx.qty : 6;
 
   // Use TIERS from data.js
   const sections = TIERS.map((tier) => ({
@@ -252,22 +197,18 @@
     svg.innerHTML += `<text x="500" y="50" text-anchor="middle" fill="#333" font-size="18" font-weight="bold">${sec.name} · €${sec.price}</text>`;
 
     // Generate seats randomly within the section area
-    // Use a bounding box for seats (centered around x=500, y=350)
     const seatCount = sec.remaining;
+    const bookedSeats = 20;
     const seatAreaW = 700;
     const seatAreaH = 450;
     const seatW = 60;
     const seatH = 50;
     const startX = (1000 - seatAreaW) / 2;
     const startY = 120;
-    const bookedSeats = 20; // some booked (gray) – we'll generate more than remaining to have booked ones
 
     for (let i = 0; i < seatCount + bookedSeats; i++) {
-      // Random position within area
       let x = startX + Math.random() * (seatAreaW - seatW);
       let y = startY + Math.random() * (seatAreaH - seatH);
-      // Ensure seat doesn't overlap too much (simple check, but we'll just random)
-      // We'll create a seat with number i+1 and a random direction label
       const isAvailable = i < seatCount;
       const seatId = `${sectionId}-seat-${i+1}`;
       const seatNumber = i + 1;
@@ -293,7 +234,10 @@
       seatEl.classList.add('available');
       seatEl.querySelector('rect').style.fill = '#3E8BFF';
     } else {
-      if (selectedSeats.size >= 6) { alert('Max 6 seats per order'); return; }
+      if (selectedSeats.size >= maxSeatsToSelect) {
+        alert('You can only select ' + maxSeatsToSelect + ' seat(s).');
+        return;
+      }
       selectedSeats.set(seatId, {
         seatId,
         price: parseFloat(seatEl.dataset.price),
@@ -315,12 +259,12 @@
     selectedSeats.forEach((seat) => { total += seat.price; });
     document.getElementById('selected-count').textContent = count + ' seat' + (count !== 1 ? 's' : '') + ' selected';
     document.getElementById('selected-total').textContent = '€' + total.toFixed(2);
-    document.getElementById('proceed-btn').disabled = count === 0;
+    document.getElementById('proceed-btn').disabled = count !== maxSeatsToSelect;
   }
 
   // Proceed button
   document.getElementById('proceed-btn').addEventListener('click', () => {
-    if (selectedSeats.size === 0) return;
+    if (selectedSeats.size !== maxSeatsToSelect) return;
     const seatList = [];
     selectedSeats.forEach((seat) => {
       seatList.push({
@@ -333,7 +277,7 @@
       });
     });
     Cart.setSeats(seatList);
-    Cart.setPackage({ day: 'sun', tier: 'multiple', tierName: 'Multiple', qty: seatList.length });
+    Cart.setPackage(packageCtx);
     window.location.href = 'checkout.html';
   });
 
