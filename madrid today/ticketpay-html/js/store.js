@@ -5,7 +5,7 @@ const supabaseUrl = 'https://crixlmnrpbjxcflcxpbf.supabase.co';
 const supabaseAnonKey = 'sb_publishable_rbE4Y8tl9HMPwe8Wh60yaA_MF5yGq9P';
 const supabase = supabase.createClient(supabaseUrl, supabaseAnonKey);
 
-// Cart (localStorage for demo, but could be moved to Supabase later)
+// Cart (localStorage for demo)
 const CART_KEY = "ticketmaster.demo.selection";
 const SEATS_KEY = "ticketmaster.demo.seats";
 const PACKAGE_KEY = "ticketmaster.demo.package";
