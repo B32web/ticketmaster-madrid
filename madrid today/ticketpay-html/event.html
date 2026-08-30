@@ -15,21 +15,29 @@
 <style>
   #stadium-container {
     width: 100%;
-    height: 600px;
+    height: 700px;
     background: #f4f6f8;
     border: 1px solid #ddd;
     border-radius: 12px;
     position: relative;
     overflow: hidden;
+    cursor: grab;
   }
-  .section {
+  #stadium-container:active { cursor: grabbing; }
+  #stadium-svg {
+    width: 100%;
+    height: 100%;
+    transform-origin: 0 0;
+    user-select: none;
+  }
+  .section-block {
     cursor: pointer;
-    transition: fill .2s;
+    transition: fill .2s, opacity .15s;
   }
-  .section:hover { filter: brightness(1.2); }
-  .section.available { fill: #3E8BFF; }
-  .section.selected { fill: #FFB81C; }
-  .section.soldout { fill: #4C5668; opacity: .5; cursor: not-allowed; }
+  .section-block:hover { filter: brightness(1.1); }
+  .section-block.available { fill: #3E8BFF; }
+  .section-block.selected { fill: #FFB81C; }
+  .section-block.soldout { fill: #4C5668; opacity: .5; cursor: not-allowed; }
   .seat {
     cursor: pointer;
     transition: fill .15s;
@@ -64,17 +72,31 @@
     justify-content: space-between;
     align-items: center;
     border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0,0,0,.08);
   }
   #proceed-btn {
     background: #026cdf;
     color: #fff;
     border: none;
-    padding: 10px 18px;
+    padding: 12px 20px;
     border-radius: 8px;
     font-weight: 700;
+    font-size: 14px;
     cursor: pointer;
   }
   #proceed-btn:disabled { background: #ccc; cursor: not-allowed; }
+  .tooltip {
+    position: fixed;
+    display: none;
+    z-index: 999;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 10px 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,.15);
+    font-size: 12px;
+    pointer-events: none;
+  }
 </style>
 </head>
 <body>
@@ -115,7 +137,7 @@
       </div>
     </section>
 
-    <!-- Seat Map -->
+    <!-- Seat Map Section -->
     <section class="section" id="seats">
       <div class="section-head">
         <h2 class="font-display">Select Your Seats</h2>
@@ -123,7 +145,7 @@
       </div>
 
       <div id="stadium-container">
-        <svg id="stadium-svg" width="100%" height="100%" viewBox="0 0 1000 600"></svg>
+        <svg id="stadium-svg" viewBox="0 0 1000 700"></svg>
         <div id="map-controls">
           <button onclick="zoomIn()">+</button>
           <button onclick="zoomOut()">−</button>
@@ -157,6 +179,13 @@
   </div>
 </footer>
 
+<!-- Tooltip -->
+<div class="tooltip" id="tooltip">
+  <div class="tooltip-title" id="tooltip-title"></div>
+  <div class="tooltip-row" id="tooltip-row"></div>
+  <div class="tooltip-price" id="tooltip-price"></div>
+</div>
+
 <script src="js/data.js"></script>
 <script src="js/store.js"></script>
 <script>
@@ -167,32 +196,29 @@
   }
   setLanguage((function(){ try { return localStorage.getItem('tm_lang') || 'es'; } catch (e) { return 'es'; } })());
 
-  // ===== SEAT MAP (Simplified but Interactive) =====
+  // ===== SEAT MAP (Fully Interactive) =====
   const svg = document.getElementById('stadium-svg');
+  const tooltip = document.getElementById('tooltip');
+  const tooltipTitle = document.getElementById('tooltip-title');
+  const tooltipRow = document.getElementById('tooltip-row');
+  const tooltipPrice = document.getElementById('tooltip-price');
   const selectedSeats = new Map();
-  let selectedCountEl = document.getElementById('selected-count');
-  let selectedTotalEl = document.getElementById('selected-total');
-  let proceedBtn = document.getElementById('proceed-btn');
 
-  // Use TIERS from data.js (11 categories with prices/remaining)
-  // We'll create a simple stadium layout: 11 section blocks, each with seats.
-  const sections = [];
-  TIERS.forEach((tier, index) => {
-    sections.push({
-      id: tier.id,
-      name: tier.name,
-      price: tier.price,
-      remaining: tier.remaining
-    });
-  });
+  // Use TIERS from data.js
+  const sections = TIERS.map((tier) => ({
+    id: tier.id,
+    name: tier.name,
+    price: tier.price,
+    remaining: tier.remaining
+  }));
 
-  // Generate SVG sections
-  function renderStadium() {
+  // Draw Overview (Stadium)
+  function renderOverview() {
     svg.innerHTML = '';
     // Stage
     svg.innerHTML += `<rect x="450" y="30" width="100" height="30" rx="5" fill="#1F262D" /><text x="500" y="50" text-anchor="middle" fill="#fff" font-size="14">STAGE</text>`;
 
-    // Draw 11 sections as blocks around the stage
+    // Draw sections around stage
     const cols = 4;
     const rows = 3;
     let index = 0;
@@ -203,7 +229,7 @@
         const x = 50 + c * 220;
         const y = 100 + r * 150;
         svg.innerHTML += `
-          <g class="section available" data-section="${sec.id}" data-price="${sec.price}" data-name="${sec.name}" onclick="openSection('${sec.id}')">
+          <g class="section-block available" data-section-id="${sec.id}" data-price="${sec.price}" data-name="${sec.name}" data-remaining="${sec.remaining}" onclick="openSection('${sec.id}')">
             <rect x="${x}" y="${y}" width="200" height="130" rx="10" fill="#3E8BFF" />
             <text x="${x+100}" y="${y+70}" text-anchor="middle" fill="#fff" font-size="16" font-weight="bold">${sec.name}</text>
             <text x="${x+100}" y="${y+100}" text-anchor="middle" fill="#fff" font-size="12">${sec.remaining} seats</text>
@@ -211,48 +237,73 @@
         index++;
       }
     }
+    updateSummary();
+    document.getElementById('seatAvailability').textContent = (sections.reduce((a, b) => a + b.remaining, 0)) + ' tickets available';
   }
 
   // Open a section to select seats
   function openSection(sectionId) {
     const sec = sections.find(s => s.id === sectionId);
+    if (!sec) return;
     svg.innerHTML = '';
-    // Draw seats for this section
-    const cols = 5;
-    const rows = 4;
-    let seatCount = 0;
-    const maxSeats = sec.remaining;
-    for (let r = 0; r < rows; r++) {
-      for (let c = 0; c < cols; c++) {
-        const x = 150 + c * 120;
-        const y = 150 + r * 100;
-        const isAvailable = seatCount < maxSeats;
-        const seatId = `${sectionId}-${r}-${c}`;
-        svg.innerHTML += `
-          <rect class="seat ${isAvailable ? 'available' : 'unavailable'}" data-seat="${seatId}" x="${x}" y="${y}" width="90" height="70" rx="8" ${isAvailable ? `onclick="toggleSeat('${seatId}')"` : ''} />
-          <text x="${x+45}" y="${y+40}" text-anchor="middle" fill="#fff" font-size="12">${r+1}-${c+1}</text>
-        `;
-        seatCount++;
-      }
-    }
     // Back button
-    svg.innerHTML += `<text x="50" y="50" fill="#026cdf" font-size="20" onclick="renderStadium()" style="cursor:pointer;">← Back</text>`;
-    svg.innerHTML += `<text x="500" y="50" text-anchor="middle" fill="#333" font-size="18">${sec.name} · €${sec.price}</text>`;
+    svg.innerHTML += `<text x="50" y="50" fill="#026cdf" font-size="20" style="cursor:pointer;" onclick="renderOverview()">← Back</text>`;
+    // Section title
+    svg.innerHTML += `<text x="500" y="50" text-anchor="middle" fill="#333" font-size="18" font-weight="bold">${sec.name} · €${sec.price}</text>`;
+
+    // Generate seats randomly within the section area
+    // Use a bounding box for seats (centered around x=500, y=350)
+    const seatCount = sec.remaining;
+    const seatAreaW = 700;
+    const seatAreaH = 450;
+    const seatW = 60;
+    const seatH = 50;
+    const startX = (1000 - seatAreaW) / 2;
+    const startY = 120;
+    const bookedSeats = 20; // some booked (gray) – we'll generate more than remaining to have booked ones
+
+    for (let i = 0; i < seatCount + bookedSeats; i++) {
+      // Random position within area
+      let x = startX + Math.random() * (seatAreaW - seatW);
+      let y = startY + Math.random() * (seatAreaH - seatH);
+      // Ensure seat doesn't overlap too much (simple check, but we'll just random)
+      // We'll create a seat with number i+1 and a random direction label
+      const isAvailable = i < seatCount;
+      const seatId = `${sectionId}-seat-${i+1}`;
+      const seatNumber = i + 1;
+      const locationLabel = ["Left", "Right", "Front", "Back", "Center", "Aisle"][Math.floor(Math.random() * 6)];
+      svg.innerHTML += `
+        <g class="seat ${isAvailable ? 'available' : 'unavailable'}" data-seat-id="${seatId}" data-price="${sec.price}" data-name="${sec.name}" data-number="${seatNumber}" data-location="${locationLabel}" ${isAvailable ? `onclick="toggleSeat('${seatId}')" onmouseover="showTooltip(event, '${sec.name}', 'Seat ${seatNumber}', '${locationLabel}', '${sec.price}')" onmouseout="hideTooltip()"` : ''}>
+          <rect x="${x}" y="${y}" width="${seatW}" height="${seatH}" rx="8" fill="${isAvailable ? '#3E8BFF' : '#4C5668'}" />
+          <text x="${x+seatW/2}" y="${y+22}" text-anchor="middle" fill="#fff" font-size="13" font-weight="bold">${seatNumber}</text>
+          <text x="${x+seatW/2}" y="${y+40}" text-anchor="middle" fill="#fff" font-size="10">${locationLabel}</text>
+          ${!isAvailable ? `<text x="${x+seatW/2}" y="${y+70}" text-anchor="middle" fill="#fff" font-size="9">BOOKED</text>` : ''}
+        </g>`;
+    }
+    updateSummary();
   }
 
   // Toggle seat selection
   function toggleSeat(seatId) {
-    const seatEl = document.querySelector(`[data-seat="${seatId}"]`);
+    const seatEl = document.querySelector(`[data-seat-id="${seatId}"]`);
     if (!seatEl || !seatEl.classList.contains('available')) return;
     if (selectedSeats.has(seatId)) {
       selectedSeats.delete(seatId);
       seatEl.classList.remove('selected');
       seatEl.classList.add('available');
+      seatEl.querySelector('rect').style.fill = '#3E8BFF';
     } else {
       if (selectedSeats.size >= 6) { alert('Max 6 seats per order'); return; }
-      selectedSeats.set(seatId, { seat: seatId });
+      selectedSeats.set(seatId, {
+        seatId,
+        price: parseFloat(seatEl.dataset.price),
+        name: seatEl.dataset.name,
+        number: seatEl.dataset.number,
+        location: seatEl.dataset.location
+      });
       seatEl.classList.remove('available');
       seatEl.classList.add('selected');
+      seatEl.querySelector('rect').style.fill = '#FFB81C';
     }
     updateSummary();
   }
@@ -261,31 +312,24 @@
   function updateSummary() {
     const count = selectedSeats.size;
     let total = 0;
-    selectedSeats.forEach((_, id) => {
-      const sectionId = id.split('-')[0];
-      const sec = sections.find(s => s.id === sectionId);
-      total += sec.price;
-    });
-    selectedCountEl.textContent = count + ' seat' + (count !== 1 ? 's' : '') + ' selected';
-    selectedTotalEl.textContent = '€' + total.toFixed(2);
-    proceedBtn.disabled = count === 0;
+    selectedSeats.forEach((seat) => { total += seat.price; });
+    document.getElementById('selected-count').textContent = count + ' seat' + (count !== 1 ? 's' : '') + ' selected';
+    document.getElementById('selected-total').textContent = '€' + total.toFixed(2);
+    document.getElementById('proceed-btn').disabled = count === 0;
   }
 
   // Proceed button
-  proceedBtn.addEventListener('click', () => {
+  document.getElementById('proceed-btn').addEventListener('click', () => {
     if (selectedSeats.size === 0) return;
     const seatList = [];
-    selectedSeats.forEach((_, id) => {
-      const parts = id.split('-');
-      const sectionId = parts[0];
-      const sec = sections.find(s => s.id === sectionId);
+    selectedSeats.forEach((seat) => {
       seatList.push({
-        section: sectionId,
-        row: parts[1],
-        seat: parts[2],
-        price: sec.price,
-        sectionName: sec.name,
-        tierLabel: sec.name
+        section: seat.seatId.split('-')[0],
+        row: seat.location,
+        seat: seat.number,
+        price: seat.price,
+        sectionName: seat.name,
+        tierLabel: seat.name
       });
     });
     Cart.setSeats(seatList);
@@ -293,19 +337,27 @@
     window.location.href = 'checkout.html';
   });
 
-  // Zoom controls (simplified)
+  // Tooltip
+  function showTooltip(event, name, row, seat, price) {
+    tooltipTitle.textContent = name;
+    tooltipRow.textContent = 'Seat ' + row + ' · ' + seat;
+    tooltipPrice.textContent = '€' + price;
+    tooltip.style.display = 'block';
+    tooltip.style.left = (event.clientX + 15) + 'px';
+    tooltip.style.top = (event.clientY + 15) + 'px';
+  }
+  function hideTooltip() {
+    tooltip.style.display = 'none';
+  }
+
+  // Zoom controls
   let zoom = 1;
   function zoomIn() { zoom = Math.min(2, zoom + 0.2); svg.style.transform = `scale(${zoom})`; }
   function zoomOut() { zoom = Math.max(0.6, zoom - 0.2); svg.style.transform = `scale(${zoom})`; }
   function resetZoom() { zoom = 1; svg.style.transform = `scale(1)`; }
 
-  // Availability note
-  const dayInv = getDayInventory('sun');
-  const avail = dayInv ? dayInv.remaining : 0;
-  document.getElementById('seatAvailability').textContent = avail + ' tickets available';
-
   // Init
-  renderStadium();
+  renderOverview();
 </script>
 </body>
 </html>
