@@ -13,6 +13,7 @@
   const supabase = supabase.createClient(supabaseUrl, supabaseAnonKey);
 </script>
 <style>
+  /* Same ticket card styles as before */
   .ticket-card {
     background: #fff;
     border: 1px solid #ddd;
@@ -220,6 +221,16 @@
       flex: 1;
     }
   }
+  /* Prototype badge */
+  .prototype-badge {
+    background: #ffb81c;
+    color: #111;
+    font-size: 10px;
+    font-weight: 800;
+    padding: 4px 8px;
+    border-radius: 20px;
+    margin-left: 10px;
+  }
 </style>
 </head>
 <body>
@@ -294,23 +305,95 @@
       return '<div class="barcode">' + bars + '</div>';
     }
 
-    // Mask ticket code: first 2 + *** + last 1 (or first 1 + *** + last 1 if length is even?)
-    // User example: "APJR9H" -> "AP***H" (first 2 + *** + last 1)
     function maskTicketCode(code) {
       if (code.length < 4) return code;
       return code.slice(0, 2) + '***' + code.slice(-1);
+    }
+
+    function renderPrototypeTicket() {
+      // Show two prototype tickets (examples)
+      return `
+        <div style="text-align:center; margin-bottom:20px; padding:10px; background:#fff8e1; border:1px solid #ffb81c; border-radius:8px;">
+          <strong>Prototype Preview</strong> – This is how your ticket will look.
+        </div>
+        <div class="ticket-card animate-rise">
+          <div class="ticket-header">
+            <div class="ticket-brand"><span class="tm-logo"><span class="tm-logo-mark">®</span><span>ticketmaster</span></span></div>
+            <span class="ticket-type">BASIC</span>
+            <span class="verified">Verified</span>
+          </div>
+          <div class="ticket-main">
+            <div>
+              <h2 class="ticket-event">THE WEEKND · AFTER HOURS TIL DAWN</h2>
+              <p class="ticket-meta">Domingo, 30 Ago 2026 · Riyadh Air Metropolitano</p>
+              <div class="seat-info-grid">
+                <div class="info-box"><span class="info-label">Row</span><span class="info-value">11</span></div>
+                <div class="info-box"><span class="info-label">Seat</span><span class="info-value">6</span></div>
+                <div class="info-box"><span class="info-label">Entrance</span><span class="info-value">4</span></div>
+              </div>
+            </div>
+            <div class="barcode-panel">
+              <div class="barcode-label">Scan at entrance</div>
+              ${generateBarcode()}
+              <div class="barcode-number">AP***H</div>
+            </div>
+          </div>
+          <div class="ticket-footer">
+            <div class="action-left">
+              <button class="action primary" onclick="showToast('Prototype ticket – cannot be used for entry.')">Add to Wallet</button>
+              <button class="action" onclick="showToast('Prototype details')">Details</button>
+              <button class="action" onclick="showToast('Transfer not available for prototype')">Transfer</button>
+            </div>
+            <div class="ticket-id">Ticket ID: AP***H</div>
+          </div>
+        </div>
+
+        <div class="ticket-card animate-rise">
+          <div class="ticket-header">
+            <div class="ticket-brand"><span class="tm-logo"><span class="tm-logo-mark">®</span><span>ticketmaster</span></span></div>
+            <span class="ticket-type">BASIC</span>
+            <span class="verified">Verified</span>
+          </div>
+          <div class="ticket-main">
+            <div>
+              <h2 class="ticket-event">THE WEEKND · AFTER HOURS TIL DAWN</h2>
+              <p class="ticket-meta">Domingo, 30 Ago 2026 · Riyadh Air Metropolitano</p>
+              <div class="seat-info-grid">
+                <div class="info-box"><span class="info-label">Row</span><span class="info-value">10</span></div>
+                <div class="info-box"><span class="info-label">Seat</span><span class="info-value">2</span></div>
+                <div class="info-box"><span class="info-label">Entrance</span><span class="info-value">1</span></div>
+              </div>
+            </div>
+            <div class="barcode-panel">
+              <div class="barcode-label">Scan at entrance</div>
+              ${generateBarcode()}
+              <div class="barcode-number">MI***T</div>
+            </div>
+          </div>
+          <div class="ticket-footer">
+            <div class="action-left">
+              <button class="action primary" onclick="showToast('Prototype ticket – cannot be used for entry.')">Add to Wallet</button>
+              <button class="action" onclick="showToast('Prototype details')">Details</button>
+              <button class="action" onclick="showToast('Transfer not available for prototype')">Transfer</button>
+            </div>
+            <div class="ticket-id">Ticket ID: MI***T</div>
+          </div>
+        </div>
+      `;
+    }
+
+    function showToast(msg) {
+      document.getElementById('toast').textContent = msg;
+      document.getElementById('toast').classList.add('show');
+      setTimeout(() => document.getElementById('toast').classList.remove('show'), 3000);
     }
 
     const orders = await Orders.all();
     const list = document.getElementById("tickets-list");
 
     if (orders.length === 0) {
-      list.innerHTML = `
-        <div class="empty-state">
-          <h3>No tickets yet</h3>
-          <p>Purchase tickets on the Madrid event page to see them here.</p>
-          <div style="margin-top:18px;"><a href="event.html" class="btn btn-primary btn-sm">Browse Madrid tickets</a></div>
-        </div>`;
+      // Show prototype tickets (this is what the user requested)
+      list.innerHTML = renderPrototypeTicket();
     } else {
       let html = '';
       orders.forEach(order => {
@@ -319,16 +402,14 @@
           const day = DAYS.find(d => d.id === line.day) || { weekday: "Domingo", date: "30 Ago 2026" };
           const tierBadge = line.tierLabel || "TICKET";
           const maskedCode = maskTicketCode(line.code || "DEMO");
-          const entrance = (line.entrance) ? line.entrance : (Math.floor(Math.random()*4)+1);
-          const row = (line.row !== undefined) ? line.row : (Math.floor(Math.random()*20)+1);
-          const seat = (line.seatNumber !== undefined) ? line.seatNumber : (Math.floor(Math.random()*30)+1);
+          const entrance = line.entrance || (Math.floor(Math.random()*4)+1);
+          const row = line.row || (Math.floor(Math.random()*20)+1);
+          const seat = line.seatNumber || (Math.floor(Math.random()*30)+1);
 
           html += `
             <div class="ticket-card animate-rise">
               <div class="ticket-header">
-                <div class="ticket-brand">
-                  <span class="tm-logo"><span class="tm-logo-mark">®</span><span>ticketmaster</span></span>
-                </div>
+                <div class="ticket-brand"><span class="tm-logo"><span class="tm-logo-mark">®</span><span>ticketmaster</span></span></div>
                 <span class="ticket-type">${tierBadge.toUpperCase()}</span>
                 <span class="verified">Verified</span>
               </div>
@@ -337,18 +418,9 @@
                   <h2 class="ticket-event">THE WEEKND · AFTER HOURS TIL DAWN</h2>
                   <p class="ticket-meta">${day.weekday}, ${day.date} · Riyadh Air Metropolitano</p>
                   <div class="seat-info-grid">
-                    <div class="info-box">
-                      <span class="info-label">Row</span>
-                      <span class="info-value">${row}</span>
-                    </div>
-                    <div class="info-box">
-                      <span class="info-label">Seat</span>
-                      <span class="info-value">${seat}</span>
-                    </div>
-                    <div class="info-box">
-                      <span class="info-label">Entrance</span>
-                      <span class="info-value">${entrance}</span>
-                    </div>
+                    <div class="info-box"><span class="info-label">Row</span><span class="info-value">${row}</span></div>
+                    <div class="info-box"><span class="info-label">Seat</span><span class="info-value">${seat}</span></div>
+                    <div class="info-box"><span class="info-label">Entrance</span><span class="info-value">${entrance}</span></div>
                   </div>
                 </div>
                 <div class="barcode-panel">
@@ -359,9 +431,9 @@
               </div>
               <div class="ticket-footer">
                 <div class="action-left">
-                  <button class="action primary" onclick="addToWallet('${line.code}')">Add to Wallet</button>
-                  <button class="action" onclick="showDetails('${line.code}')">Details</button>
-                  <button class="action" onclick="transferTicket('${line.code}')">Transfer</button>
+                  <button class="action primary" onclick="showToast('Ticket added to wallet')">Add to Wallet</button>
+                  <button class="action" onclick="showToast('Details: ' + '${maskedCode}')">Details</button>
+                  <button class="action" onclick="showToast('Transfer option not available')">Transfer</button>
                 </div>
                 <div class="ticket-id">Ticket ID: ${maskedCode}</div>
               </div>
@@ -371,27 +443,9 @@
       list.innerHTML = html;
     }
 
-    window.addToWallet = function(code) {
-      document.getElementById('toast').textContent = "Ticket added to Apple Wallet / Google Pay";
-      document.getElementById('toast').classList.add('show');
-      setTimeout(() => document.getElementById('toast').classList.remove('show'), 3000);
-    }
-    window.showDetails = function(code) {
-      document.getElementById('toast').textContent = "Ticket details: " + maskTicketCode(code);
-      document.getElementById('toast').classList.add('show');
-      setTimeout(() => document.getElementById('toast').classList.remove('show'), 3000);
-    }
-    window.transferTicket = function(code) {
-      document.getElementById('toast').textContent = "Transfer options for ticket " + maskTicketCode(code);
-      document.getElementById('toast').classList.add('show');
-      setTimeout(() => document.getElementById('toast').classList.remove('show'), 3000);
-    }
-
     const params = new URLSearchParams(window.location.search);
     if (params.get("new")) {
-      document.getElementById('toast').textContent = "Payment confirmed — your tickets are ready!";
-      document.getElementById('toast').classList.add('show');
-      setTimeout(() => document.getElementById('toast').classList.remove('show'), 3500);
+      showToast("Payment confirmed — your tickets are ready!");
     }
   })();
 </script>
