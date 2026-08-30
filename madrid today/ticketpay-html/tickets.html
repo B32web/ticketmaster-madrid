@@ -13,7 +13,7 @@
   const supabase = supabase.createClient(supabaseUrl, supabaseAnonKey);
 </script>
 <style>
-  /* (your ticket card styles) */
+  /* ... existing ticket card styles ... */
 </style>
 </head>
 <body>
@@ -24,15 +24,14 @@
     <nav class="main-nav">
       <a href="index.html">Home</a>
       <a href="event.html">Madrid Event</a>
-      <a href="packages.html">Buy Tickets</a>
       <a href="tickets.html" class="active">My Tickets</a>
     </nav>
     <div class="header-actions">
       <div class="lang-switch">
-        <button class="lang-btn" data-lang="es" onclick="setLanguage('es')"><span class="flag-icon">🇪🇸</span> ES</button>
-        <button class="lang-btn active" data-lang="en" onclick="setLanguage('en')"><span class="flag-icon">🇬🇧</span> EN</button>
+        <button class="lang-btn active" data-lang="es" onclick="setLanguage('es')">ES</button>
+        <button class="lang-btn" data-lang="en" onclick="setLanguage('en')">EN</button>
       </div>
-      <div class="header-user">franklin odhiambo otieno</div>
+      <div class="header-user">Franklin Otieno</div>
     </div>
   </div>
 </header>
@@ -44,6 +43,7 @@
       <h1 class="font-display">My Tickets</h1>
     </div>
   </div>
+
   <div class="container" style="padding:40px 0 100px;">
     <div id="tickets-list"></div>
   </div>
@@ -69,16 +69,16 @@
 <script src="js/data.js"></script>
 <script src="js/store.js"></script>
 <script>
-  // Language
-  function setLanguage(lang) {
-    document.documentElement.lang = lang;
-    document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.lang === lang));
-    try { localStorage.setItem('tm_lang', lang); } catch (e) {}
-  }
-  setLanguage((function(){ try { return localStorage.getItem('tm_lang') || 'es'; } catch (e) { return 'es'; } })());
-
-  // Render tickets (async)
   (async () => {
+    // Language switcher
+    function setLanguage(lang) {
+      document.documentElement.lang = lang;
+      document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.lang === lang));
+      try { localStorage.setItem('tm_lang', lang); } catch (e) {}
+    }
+    setLanguage((function(){ try { return localStorage.getItem('tm_lang') || 'es'; } catch (e) { return 'es'; } })());
+
+    // Generate barcode bars (visual placeholder)
     function generateBarcode() {
       let bars = '';
       for (let i = 0; i < 50; i++) {
@@ -88,6 +88,13 @@
       return '<div class="barcode">' + bars + '</div>';
     }
 
+    // Mask the ticket code (e.g., APJR9H -> AP***H)
+    function maskTicketCode(code) {
+      if (code.length <= 3) return code; // too short, show as is
+      return code.slice(0, 2) + '***' + code.slice(-1);
+    }
+
+    // Render tickets (async)
     const orders = await Orders.all();
     const list = document.getElementById("tickets-list");
 
@@ -103,28 +110,47 @@
       orders.forEach(order => {
         const meta = order.metadata || {};
         (meta.lines || []).forEach(line => {
-          const day = DAYS.find(d => d.id === line.day) || { weekday: "Saturday", date: "29 Ago 2026" };
+          const day = DAYS.find(d => d.id === line.day) || { weekday: "Domingo", date: "30 Ago 2026" };
           const tierBadge = line.tierLabel || "TICKET";
+          const maskedCode = maskTicketCode(line.code || "DEMO");
+
           const seatInfoHtml = line.isGroup
             ? `<div class="info-box" style="grid-column: 1 / -1;"><span class="info-label">Group ticket · ${line.groupSize} seats</span><span class="info-value" style="font-size:13px; line-height:1.6; font-weight:700;">${line.seats.map(s => `${s.sectionName} · Row ${s.row} · Seat ${s.seatNumber}`).join('<br>')}</span></div>`
-            : `<div class="info-box"><span class="info-label">Section</span><span class="info-value">${line.sectionName || line.tier.toUpperCase()}</span></div><div class="info-box"><span class="info-label">Row</span><span class="info-value">${line.row}</span></div><div class="info-box"><span class="info-label">Seat</span><span class="info-value">${line.seatNumber}</span></div>`;
+            : `
+                <div class="info-box">
+                  <span class="info-label">Section</span>
+                  <span class="info-value">${line.sectionName || line.tier.toUpperCase()}</span>
+                </div>
+                <div class="info-box">
+                  <span class="info-label">Row</span>
+                  <span class="info-value">${line.row}</span>
+                </div>
+                <div class="info-box">
+                  <span class="info-label">Seat</span>
+                  <span class="info-value">${line.seatNumber}</span>
+                </div>`;
+
           html += `
             <div class="ticket-card animate-rise">
               <div class="ticket-header">
-                <div class="ticket-brand"><span class="tm-logo"><span class="tm-logo-mark">®</span><span>ticketmaster</span></span></div>
-                <span class="ticket-type">${tierBadge.toUpperCase()}${line.isGroup ? " · GROUP" : ""}</span>
+                <div class="ticket-brand">
+                  <span class="tm-logo"><span class="tm-logo-mark">®</span><span>ticketmaster</span></span>
+                </div>
+                <span class="ticket-type">${tierBadge.toUpperCase()}</span>
                 <span class="verified">Verified</span>
               </div>
               <div class="ticket-main">
                 <div>
                   <h2 class="ticket-event">THE WEEKND · AFTER HOURS TIL DAWN</h2>
                   <p class="ticket-meta">${day.weekday}, ${day.date} · Riyadh Air Metropolitano</p>
-                  <div class="seat-info-grid">${seatInfoHtml}</div>
+                  <div class="seat-info-grid">
+                    ${seatInfoHtml}
+                  </div>
                 </div>
                 <div class="barcode-panel">
                   <div class="barcode-label">Scan at entrance</div>
                   ${generateBarcode()}
-                  <div class="barcode-number">${line.code}</div>
+                  <div class="barcode-number">${maskedCode}</div>
                 </div>
               </div>
               <div class="ticket-footer">
@@ -133,7 +159,7 @@
                   <button class="action" onclick="showDetails('${line.code}')">Details</button>
                   <button class="action" onclick="transferTicket('${line.code}')">Transfer</button>
                 </div>
-                <div class="ticket-id">Ticket ID: ${line.code}${line.price ? " · €" + line.price.toFixed(2) : ""}</div>
+                <div class="ticket-id">Ticket ID: ${maskedCode}</div>
               </div>
             </div>`;
         });
@@ -141,18 +167,19 @@
       list.innerHTML = html;
     }
 
+    // Actions
     window.addToWallet = function(code) {
-      document.getElementById('toast').textContent = "Ticket " + code + " added to Apple Wallet / Google Pay";
+      document.getElementById('toast').textContent = "Ticket added to Apple Wallet / Google Pay";
       document.getElementById('toast').classList.add('show');
       setTimeout(() => document.getElementById('toast').classList.remove('show'), 3000);
     }
     window.showDetails = function(code) {
-      document.getElementById('toast').textContent = "Ticket details: Order " + code;
+      document.getElementById('toast').textContent = "Ticket details: " + maskTicketCode(code);
       document.getElementById('toast').classList.add('show');
       setTimeout(() => document.getElementById('toast').classList.remove('show'), 3000);
     }
     window.transferTicket = function(code) {
-      document.getElementById('toast').textContent = "Transfer options for ticket " + code;
+      document.getElementById('toast').textContent = "Transfer options for ticket " + maskTicketCode(code);
       document.getElementById('toast').classList.add('show');
       setTimeout(() => document.getElementById('toast').classList.remove('show'), 3000);
     }
