@@ -12,8 +12,8 @@ const EVENT = {
 
 const DAYS = [
   { id: "fri", label: "Day 1", weekday: "Viernes", date: "28 Ago 2026", soldOut: true },
-  { id: "sat", label: "Day 2", weekday: "Sábado", date: "29 Ago 2026", soldOut: false },
-  { id: "sun", label: "Day 3", weekday: "Domingo", date: "30 Ago 2026", soldOut: true },
+  { id: "sat", label: "Day 2", weekday: "Sábado", date: "29 Ago 2026", soldOut: true },
+  { id: "sun", label: "Day 3", weekday: "Domingo", date: "30 Ago 2026", soldOut: false },
 ];
 
 const TIERS = [
@@ -35,8 +35,8 @@ const TIER_PERKS = Object.fromEntries(TIERS.map(t => [t.id, ["Digital ticket", "
 
 const REMAINING = {
   fri: Object.fromEntries(TIERS.map(t => [t.id, 0])),
-  sat: Object.fromEntries(TIERS.map(t => [t.id, t.remaining])),
-  sun: Object.fromEntries(TIERS.map(t => [t.id, 0])),
+  sat: Object.fromEntries(TIERS.map(t => [t.id, 0])),
+  sun: Object.fromEntries(TIERS.map(t => [t.id, t.remaining])),
 };
 
 const GROUP_DISCOUNTS = [
@@ -113,10 +113,11 @@ const INVENTORY_KEY = "ticketmaster.demo.inventory";
 const GROUP_SLOTS_PER_DAY = 7;
 
 function defaultInventory() {
-  const satRemaining = TIERS.reduce((sum, t) => sum + t.remaining, 0); // 41
+  const sunRemaining = TIERS.reduce((sum, t) => sum + t.remaining, 0); // 41
   return {
-    sat: { total: satRemaining, remaining: satRemaining, groupTotal: GROUP_SLOTS_PER_DAY, groupRemaining: GROUP_SLOTS_PER_DAY },
-    sun: { total: 0, remaining: 0, groupTotal: GROUP_SLOTS_PER_DAY, groupRemaining: GROUP_SLOTS_PER_DAY },
+    fri: { total: 0, remaining: 0, groupTotal: GROUP_SLOTS_PER_DAY, groupRemaining: GROUP_SLOTS_PER_DAY },
+    sat: { total: 0, remaining: 0, groupTotal: GROUP_SLOTS_PER_DAY, groupRemaining: GROUP_SLOTS_PER_DAY },
+    sun: { total: sunRemaining, remaining: sunRemaining, groupTotal: GROUP_SLOTS_PER_DAY, groupRemaining: GROUP_SLOTS_PER_DAY },
   };
 }
 
@@ -125,7 +126,7 @@ let _inventoryMemory = null;
 function loadInventory() {
   try {
     const saved = JSON.parse(localStorage.getItem(INVENTORY_KEY));
-    if (saved && saved.sat && saved.sun) return saved;
+    if (saved && saved.sun) return saved;
   } catch (e) {}
   if (_inventoryMemory) return _inventoryMemory;
   const fresh = defaultInventory();
