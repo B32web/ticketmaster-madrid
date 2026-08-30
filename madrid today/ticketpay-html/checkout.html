@@ -69,6 +69,41 @@
     border-radius: 20px;
     border: 1px solid var(--tm-border);
   }
+  /* Matches the same header-auth-slot markup store.js injects on every page,
+     so the logged-in account name (or Login/Sign up links) looks native here too. */
+  #header-auth-slot { display: flex; align-items: center; gap: 10px; }
+  #header-auth-slot .header-user {
+    font-size: 13.5px;
+    font-weight: 700;
+    color: var(--tm-ink);
+    background: var(--tm-bg);
+    padding: 8px 14px;
+    border-radius: 20px;
+    border: 1px solid var(--tm-border);
+    text-decoration: none;
+  }
+  #header-auth-slot .header-login {
+    font-size: 13.5px;
+    font-weight: 700;
+    color: var(--tm-ink);
+    text-decoration: none;
+  }
+  #header-auth-slot .btn.btn-light.btn-sm {
+    font-size: 13px;
+    font-weight: 700;
+    color: #fff;
+    background: var(--tm-blue);
+    padding: 8px 14px;
+    border-radius: 20px;
+    text-decoration: none;
+  }
+  /* FIX (requested): hide checkout content until we've confirmed the user is
+     logged in, so an unauthenticated visitor doesn't see a flash of the
+     payment page before being redirected to log in. */
+  body.auth-pending .progress,
+  body.auth-pending .checkout-wrapper {
+    visibility: hidden;
+  }
 
   /* ---------- Progress steps ---------- */
   .progress {
@@ -407,13 +442,13 @@
   }
 </style>
 </head>
-<body>
+<body class="auth-pending">
 
 <header class="checkout-header">
   <div class="brand">
     <span class="tm-logo"><span class="tm-logo-mark">®</span><span>ticketmaster</span></span>
   </div>
-  <div class="account">My Account</div>
+  <div id="header-auth-slot"></div>
 </header>
 
 <nav class="progress">
