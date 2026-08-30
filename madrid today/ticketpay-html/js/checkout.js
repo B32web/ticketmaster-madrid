@@ -3,7 +3,8 @@
    ========================================================= */
 let selectedMethod = "crypto";
 let timerInterval = null;
-let secondsLeft = 10 * 60;
+// FIX (requested): reservation timer is now 5 minutes, not 10.
+let secondsLeft = 5 * 60;
 
 const WALLETS = {
   btc: "bc1qwhenpffhnsgjds3tg63qcvf78ce8sdxeppm786",
@@ -94,16 +95,27 @@ function renderOrderSummary() {
   payButton.disabled = false;
 }
 
+// FIX (requested): the "unavailable" note should open for whichever disabled
+// method was just clicked, and close again the moment it's not the relevant
+// one anymore — including closing entirely once Crypto (the working method)
+// is clicked. Using a shared helper so every option's note behaves the same way.
+function hideAllNotices() {
+  document.querySelectorAll(".unavailable-notice").forEach(n => n.classList.remove("show"));
+}
+
 document.querySelectorAll(".payment-option").forEach(option => {
   option.addEventListener("click", (e) => {
     if (e.target.tagName === "INPUT" || e.target.tagName === "BUTTON") return;
     const method = option.dataset.method;
+
     if (method === "card" || method === "apple" || method === "paypal") {
+      hideAllNotices();
       const notice = option.querySelector(".unavailable-notice");
-      if (notice) notice.style.display = "block";
+      if (notice) notice.classList.add("show");
       return;
     }
     if (method === "crypto") {
+      hideAllNotices();
       document.querySelectorAll(".payment-option").forEach(o => o.classList.remove("selected"));
       option.classList.add("selected");
       selectedMethod = "crypto";
