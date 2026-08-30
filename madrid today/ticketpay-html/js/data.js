@@ -116,9 +116,6 @@ function calculatePrice(selection) {
   };
 }
 
-/* =========================================================
-   LIVE INVENTORY — localStorage persisted, deducted on purchase
-   ========================================================= */
 const INVENTORY_KEY = "ticketmaster.demo.inventory";
 const GROUP_SLOTS_PER_DAY = 7;
 
