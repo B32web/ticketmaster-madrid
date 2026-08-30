@@ -162,7 +162,23 @@ payButton.addEventListener("click", async () => {
   window.location.href = "tickets.html?new=" + order.code;
 });
 
-document.addEventListener("DOMContentLoaded", () => {
+// FIX (requested): buying a ticket now requires being signed in. If there's
+// no logged-in user, send them to log in (or sign up from there) and bring
+// them straight back here afterwards — their seat selection stays intact
+// since it's already saved in Cart/localStorage regardless of login state.
+async function requireAuthOrRedirect() {
+  const user = await Auth.get();
+  if (!user) {
+    window.location.href = "login.html?redirect=checkout.html";
+    return null;
+  }
+  return user;
+}
+
+document.addEventListener("DOMContentLoaded", async () => {
+  const user = await requireAuthOrRedirect();
+  if (!user) return; // redirecting away; don't render checkout content
+  document.body.classList.remove("auth-pending");
   startTimer();
   initCrypto();
   renderOrderSummary();
