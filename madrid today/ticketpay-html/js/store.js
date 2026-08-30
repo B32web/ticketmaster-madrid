@@ -1,15 +1,15 @@
 /* =========================================================
-   TICKETMASTER — Supabase Integration (store.js)
+   TICKETMASTER — Local identity (store.js)
+   =========================================================
+   CHANGED (requested): login/signup are not meant to "authenticate" or
+   restrict anyone — their only job is to learn a name to greet you with
+   and give you a personal ticket dashboard. That's incompatible with a
+   real backend auth call, which validates email format, enforces a
+   minimum password length, and takes a real network round trip (that
+   was the source of the delay and the validation you didn't want).
+   So this now just remembers your name on this device — instantly,
+   with nothing checked. No Supabase client is created here anymore.
    ========================================================= */
-const supabaseUrl = 'https://crixlmnrpbjxcflcxpbf.supabase.co';
-const supabaseAnonKey = 'sb_publishable_rbE4Y8tl9HMPwe8Wh60yaA_MF5yGq9P';
-// FIX: was `const supabase = supabase.createClient(...)` — that line reads its
-// own variable before it's assigned (TDZ), throwing
-// "ReferenceError: Cannot access 'supabase' before initialization" on every
-// page load. That error stopped this whole script (and everything relying on
-// it) from running. Renamed to supabaseClient, which also avoids permanently
-// shadowing the global `supabase` object the CDN script exposes.
-const supabaseClient = supabase.createClient(supabaseUrl, supabaseAnonKey);
 
 // Cart (localStorage for demo)
 const CART_KEY = "ticketmaster.demo.selection";
@@ -35,41 +35,79 @@ const Cart = {
   getPackage() { try { return JSON.parse(localStorage.getItem(PACKAGE_KEY)); } catch { return null; } },
   clearPackage() { localStorage.removeItem(PACKAGE_KEY); }
 };
+
+// --- Local identity: the whole point is "know your name", nothing else ---
+const IDENTITY_KEY = "ticketmaster.demo.identity";
+
+function saveIdentity(identity) {
+  try { localStorage.setItem(IDENTITY_KEY, JSON.stringify(identity)); } catch (e) {}
+  return identity;
+}
+
+function makeIdentity(name, email) {
+  return {
+    id: "local_" + Math.random().toString(36).slice(2, 10),
+    name: (name || "").trim() || "Guest",
+    email: (email || "").trim()
+  };
+}
+
 const Auth = {
-  async get() { const { data: { user } } = await supabaseClient.auth.getUser(); return user; },
+  // Returns whoever is currently "signed in" on this device, or null.
+  async get() {
+    try {
+      const raw = localStorage.getItem(IDENTITY_KEY);
+      return raw ? JSON.parse(raw) : null;
+    } catch (e) { return null; }
+  },
+  // Instant, nothing validated: whatever name/email/password you typed,
+  // this just remembers your name and signs you in immediately.
   async signUp(name, email, password) {
-    const { data, error } = await supabaseClient.auth.signUp({ email, password, options: { data: { name } } });
-    return { data, error };
+    const identity = saveIdentity(makeIdentity(name, email));
+    return { data: { user: identity }, error: null };
   },
-  async signIn(email, password) {
-    const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
-    return { data, error };
+  // Same as signUp, deliberately — login isn't meant to gatekeep here,
+  // it just (re)establishes who you are on this device, instantly.
+  async signIn(name, email, password) {
+    const identity = saveIdentity(makeIdentity(name, email));
+    return { data: { user: identity }, error: null };
   },
-  async signOut() { await supabaseClient.auth.signOut(); }
+  async signOut() {
+    localStorage.removeItem(IDENTITY_KEY);
+  }
 };
+
+// --- Orders: kept local too, since they're looked up by the local identity above ---
+const ORDERS_KEY = "ticketmaster.demo.orders";
+function loadOrders() {
+  try { return JSON.parse(localStorage.getItem(ORDERS_KEY)) || []; } catch (e) { return []; }
+}
+function saveOrders(orders) {
+  try { localStorage.setItem(ORDERS_KEY, JSON.stringify(orders)); } catch (e) {}
+}
 const Orders = {
   async all() {
     const user = await Auth.get();
     if (!user) return [];
-    const { data, error } = await supabaseClient.from('orders').select('*').eq('user_id', user.id);
-    return data || [];
+    return loadOrders().filter(o => o.user_id === user.id);
   },
   async add(order) {
     const user = await Auth.get();
     if (!user) return null;
-    const { data, error } = await supabaseClient.from('orders').insert({
-      user_id: user.id, total: order.total, payment_method: order.method, metadata: order
-    }).select('id');
-    if (error) { console.error(error); return null; }
-    return data[0];
+    const record = { id: "ord_" + Math.random().toString(36).slice(2, 10), user_id: user.id, total: order.total, payment_method: order.method, metadata: order };
+    const orders = loadOrders();
+    orders.push(record);
+    saveOrders(orders);
+    return record;
   }
 };
+
 async function renderHeaderAuth() {
   const user = await Auth.get();
   const slot = document.getElementById("header-auth-slot");
   if (!slot) return;
   if (user) {
-    slot.innerHTML = `<a class="header-user" href="account.html">${user.user_metadata?.name || user.email}</a>`;
+    slot.innerHTML = `<a class="header-user" href="account.html">${user.name || user.email}</a>`;
   } else {
     slot.innerHTML = `<a class="header-login" href="login.html">Login</a><a class="btn btn-light btn-sm" href="signup.html">Sign up</a>`;
   }
