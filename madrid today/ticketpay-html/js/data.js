@@ -13,37 +13,30 @@ const EVENT = {
 const DAYS = [
   { id: "fri", label: "Day 1", weekday: "Viernes", date: "28 Ago 2026", soldOut: true },
   { id: "sat", label: "Day 2", weekday: "Sábado", date: "29 Ago 2026", soldOut: false },
-  { id: "sun", label: "Day 3", weekday: "Domingo", date: "30 Ago 2026", soldOut: false },
+  { id: "sun", label: "Day 3", weekday: "Domingo", date: "30 Ago 2026", soldOut: true },
 ];
 
 const TIERS = [
-  { id: "upper", name: "Upper", description: "Seated ticket in the upper stadium tier." },
-  { id: "ga", name: "General Admission", description: "Standing ticket with general venue access." },
-  { id: "golden-circle", name: "Golden Circle", description: "Standing ticket in the premium area closest to the stage." },
-  { id: "premium", name: "Premium", description: "Seated ticket with a better-positioned view of the stage." },
-  { id: "vip", name: "VIP", description: "Golden Circle access plus early entry and exclusive extras." },
+  { id: "grada-alta-1", name: "Grada Alta", description: "Upper grandstand seating", price: 53.50, discount: 1.50, remaining: 7 },
+  { id: "grada-alta-2", name: "Grada Alta", description: "Upper grandstand seating", price: 63.00, discount: 2.00, remaining: 5 },
+  { id: "grada-alta-3", name: "Grada Alta", description: "Upper grandstand seating", price: 74.00, discount: 1.00, remaining: 4 },
+  { id: "grada-alta-4", name: "Grada Alta", description: "Upper grandstand seating", price: 78.50, discount: 1.50, remaining: 4 },
+  { id: "grada-alta-5", name: "Grada Alta", description: "Upper grandstand seating", price: 90.00, discount: 2.00, remaining: 3 },
+  { id: "grada-alta-6", name: "Grada Alta", description: "Upper grandstand seating", price: 94.50, discount: 1.50, remaining: 2 },
+  { id: "pista-1", name: "Pista", description: "Standing floor", price: 87.50, discount: 1.50, remaining: 5 },
+  { id: "pista-2", name: "Pista", description: "Standing floor", price: 113.00, discount: 2.00, remaining: 3 },
+  { id: "grada-baja-1", name: "Grada Baja", description: "Lower grandstand seating", price: 95.50, discount: 1.50, remaining: 3 },
+  { id: "gold-circle-este", name: "Gold Circle Este", description: "Premium standing", price: 97.00, discount: 2.00, remaining: 3 },
+  { id: "gold-circle-oeste", name: "Gold Circle Oeste", description: "Premium standing", price: 108.50, discount: 1.50, remaining: 2 },
 ];
 
-const BASE_PRICE = {
-  upper: 95,
-  ga: 106,
-  "golden-circle": 107,
-  premium: 185,
-  vip: 165,
-};
-
-const TIER_PERKS = {
-  upper: ["Standard stadium access", "Digital ticket", "Event-day entry"],
-  ga: ["Standing access to the general floor", "Digital ticket", "Event-day entry"],
-  "golden-circle": ["Premium standing location", "Digital ticket", "Event-day entry"],
-  premium: ["Better-positioned seating", "Digital ticket", "Event-day entry"],
-  vip: ["Early entry before general Golden Circle", "Limited-edition gift item", "Commemorative VIP laminate", "Dedicated check-in point"],
-};
+const BASE_PRICE = Object.fromEntries(TIERS.map(t => [t.id, t.price]));
+const TIER_PERKS = Object.fromEntries(TIERS.map(t => [t.id, ["Digital ticket", "Event-day entry"]]));
 
 const REMAINING = {
-  fri: { upper: 0, ga: 0, "golden-circle": 0, premium: 0, vip: 0 },
-  sat: { upper: 6, ga: 7, "golden-circle": 4, premium: 2, vip: 2 }, // total = 21
-  sun: { upper: 30, ga: 35, "golden-circle": 20, premium: 10, vip: 5 }, // total = 100
+  fri: Object.fromEntries(TIERS.map(t => [t.id, 0])),
+  sat: Object.fromEntries(TIERS.map(t => [t.id, t.remaining])),
+  sun: Object.fromEntries(TIERS.map(t => [t.id, 0])),
 };
 
 const GROUP_DISCOUNTS = [
@@ -120,9 +113,10 @@ const INVENTORY_KEY = "ticketmaster.demo.inventory";
 const GROUP_SLOTS_PER_DAY = 7;
 
 function defaultInventory() {
+  const satRemaining = TIERS.reduce((sum, t) => sum + t.remaining, 0); // 41
   return {
-    sat: { total: 21, remaining: 21, groupTotal: GROUP_SLOTS_PER_DAY, groupRemaining: GROUP_SLOTS_PER_DAY },
-    sun: { total: 100, remaining: 100, groupTotal: GROUP_SLOTS_PER_DAY, groupRemaining: GROUP_SLOTS_PER_DAY },
+    sat: { total: satRemaining, remaining: satRemaining, groupTotal: GROUP_SLOTS_PER_DAY, groupRemaining: GROUP_SLOTS_PER_DAY },
+    sun: { total: 0, remaining: 0, groupTotal: GROUP_SLOTS_PER_DAY, groupRemaining: GROUP_SLOTS_PER_DAY },
   };
 }
 
