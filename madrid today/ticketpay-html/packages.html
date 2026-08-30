@@ -6,7 +6,6 @@
 <title>Choose Your Tickets | Ticketmaster</title>
 <link rel="stylesheet" href="css/base.css" />
 <link rel="stylesheet" href="css/pages.css" />
-<!-- ⚠️ CRITICAL: Supabase must load FIRST -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
   const supabaseUrl = 'https://crixlmnrpbjxcflcxpbf.supabase.co';
@@ -14,7 +13,50 @@
   const supabase = supabase.createClient(supabaseUrl, supabaseAnonKey);
 </script>
 <style>
-  /* ... your existing styles ... */
+  .pkg-hero { padding: 40px 0 8px; }
+  .pkg-hero .eyebrow { color: #026cdf; font-weight: 800; font-size: 11px; letter-spacing: 1.6px; }
+  .pkg-hero h1 { margin: 8px 0 4px; }
+  .pkg-hero p { color: #666; margin: 0; }
+  .steps { display: flex; gap: 10px; margin: 22px 0 30px; flex-wrap: wrap; }
+  .step { display: flex; align-items: center; gap: 8px; font-size: 12.5px; font-weight: 700; color: #9aa2ac; }
+  .step .num { width: 22px; height: 22px; border-radius: 50%; background: #eef1f4; display: flex; align-items: center; justify-content: center; font-size: 11px; }
+  .step.active { color: #026cdf; }
+  .step.active .num { background: #026cdf; color: #fff; }
+  .step-arrow { color: #ccc; }
+  .day-tabs { display: flex; gap: 12px; margin-bottom: 30px; flex-wrap: wrap; }
+  .day-tab { flex: 1; min-width: 180px; text-align: left; border: 2px solid #e2e6eb; border-radius: 12px; background: #fff; padding: 16px 18px; cursor: pointer; transition: .15s; }
+  .day-tab:hover:not(.disabled) { border-color: #aeb8c3; }
+  .day-tab.active { border-color: #026cdf; box-shadow: 0 0 0 3px rgba(2,108,223,.08); }
+  .day-tab.disabled { cursor: not-allowed; background: #f3f4f6; opacity: .6; }
+  .day-tab .d-label { font-size: 11px; font-weight: 800; letter-spacing: .6px; text-transform: uppercase; color: #9aa2ac; }
+  .day-tab.active .d-label { color: #026cdf; }
+  .day-tab .d-date { font-size: 17px; font-weight: 800; margin: 4px 0 8px; color: #17191d; }
+  .day-tab .d-avail { font-size: 12.5px; font-weight: 700; }
+  .inv-ok { color: #1f9d55; }
+  .inv-low { color: #d0281f; }
+  .inv-over { color: #d0281f; }
+  .badge-passed { display: inline-block; margin-top: 6px; background: #dfe3e8; color: #6b7280; font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 20px; letter-spacing: .4px; }
+  .pkg-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 18px; }
+  .pkg-card { border: 1px solid #e2e6eb; border-radius: 14px; padding: 20px; background: #fff; display: flex; flex-direction: column; }
+  .pkg-card h3 { margin: 0 0 4px; font-size: 17px; }
+  .pkg-card .pkg-desc { color: #777; font-size: 12.5px; margin: 0 0 10px; min-height: 32px; }
+  .pkg-perks { list-style: none; margin: 0 0 12px; padding: 0; font-size: 12px; color: #444; }
+  .pkg-perks li { padding: 3px 0 3px 18px; position: relative; }
+  .pkg-perks li::before { content: "✓"; position: absolute; left: 0; color: #026cdf; font-weight: 800; }
+  .pkg-card .pkg-price { font-size: 24px; font-weight: 900; color: #17191d; }
+  .pkg-card .pkg-price span { font-size: 12px; font-weight: 600; color: #9aa2ac; }
+  .pkg-card .pkg-discount { color: #026cdf; font-weight: 800; font-size: 13px; margin-top: 4px; }
+  .pkg-card .pkg-remaining { color: #d0281f; font-weight: 800; font-size: 12px; margin-top: 4px; }
+  .qty-row { display: flex; align-items: center; justify-content: space-between; margin: 14px 0 6px; }
+  .qty-stepper { display: flex; align-items: center; gap: 10px; }
+  .qty-stepper button { width: 30px; height: 30px; border-radius: 7px; border: 1px solid #dde1e6; background: #fff; font-size: 16px; cursor: pointer; }
+  .qty-stepper button:disabled { opacity: .35; cursor: not-allowed; }
+  .qty-stepper .qty-val { min-width: 18px; text-align: center; font-weight: 800; }
+  .pkg-total { font-size: 13px; color: #555; margin-bottom: 12px; }
+  .pkg-total b { color: #17191d; font-size: 15px; }
+  .pkg-continue { margin-top: auto; border: 0; background: #026cdf; color: #fff; padding: 12px; border-radius: 8px; font-weight: 700; font-size: 13.5px; cursor: pointer; }
+  .pkg-continue:disabled { background: #ccc; cursor: not-allowed; }
+  .sold-out-banner { background: #fef2f2; border: 1px solid #fca5a5; color: #b91c1c; border-radius: 10px; padding: 14px 18px; font-size: 13px; font-weight: 600; margin-bottom: 20px; }
 </style>
 </head>
 <body>
@@ -74,12 +116,9 @@
   </div>
 </footer>
 
-<!-- ✅ Then load data.js and store.js (both must be the correct versions) -->
 <script src="js/data.js"></script>
 <script src="js/store.js"></script>
-
 <script>
-  // Language switcher
   function setLanguage(lang) {
     document.documentElement.lang = lang;
     document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.lang === lang));
@@ -87,8 +126,122 @@
   }
   setLanguage((function(){ try { return localStorage.getItem('tm_lang') || 'es'; } catch (e) { return 'es'; } })());
 
-  // ... rest of your package logic (renderDayTabs, renderPackages, etc.) ...
-  // (This is the same script as before – it will now work because no error)
+  const TODAY_ID = "sun"; // Sunday is the only available day
+  const PASSED_IDS = ["fri", "sat"]; // Friday and Saturday sold out
+  const DAY_TAG = { fri: "Sold out", sat: "Sold out", sun: "Today" };
+
+  let selectedDay = TODAY_ID;
+  const qtyByTier = {};
+
+  function renderDayTabs() {
+    const wrap = document.getElementById("dayTabs");
+    wrap.innerHTML = "";
+    DAYS.forEach(day => {
+      const passed = PASSED_IDS.includes(day.id);
+      const inv = passed ? null : getDayInventory(day.id);
+      const el = document.createElement("button");
+      el.className = "day-tab" + (passed ? " disabled" : "") + (day.id === selectedDay ? " active" : "");
+      el.disabled = passed;
+      let availHtml;
+      if (passed) {
+        availHtml = `<span class="badge-passed">Sold out</span>`;
+      } else {
+        const d = remainingDisplay(inv.remaining, "tickets");
+        availHtml = `<span class="d-avail ${d.className}">${d.text}</span>`;
+      }
+      el.innerHTML = `
+        <div class="d-label">${DAY_TAG[day.id]}</div>
+        <div class="d-date">${day.weekday}, ${day.date}</div>
+        ${availHtml}
+      `;
+      if (!passed) {
+        el.addEventListener("click", () => { selectedDay = day.id; renderAll(); });
+      }
+      wrap.appendChild(el);
+    });
+  }
+
+  function renderSoldOutBanner() {
+    const banner = document.getElementById("soldOutBanner");
+    const inv = getDayInventory(selectedDay);
+    if (inv && inv.remaining <= 0) {
+      banner.innerHTML = `<div class="sold-out-banner">Tickets over — ${DAYS.find(d=>d.id===selectedDay).weekday} is completely sold out. Please choose another date.</div>`;
+    } else {
+      banner.innerHTML = "";
+    }
+  }
+
+  function renderPackages() {
+    const grid = document.getElementById("pkgGrid");
+    grid.innerHTML = "";
+    const inv = getDayInventory(selectedDay);
+
+    TIERS.forEach(tier => {
+      if (!(tier.id in qtyByTier)) qtyByTier[tier.id] = 1;
+      const maxQty = Math.min(6, inv.remaining);
+      let qty = Math.min(qtyByTier[tier.id], Math.max(1, maxQty));
+      qtyByTier[tier.id] = qty;
+
+      const base = BASE_PRICE[tier.id];
+      const discount = tier.discount || 0;
+      const tierRemaining = REMAINING.sun[tier.id] || 0;
+      const outOfStock = tierRemaining <= 0;
+
+      const card = document.createElement("div");
+      card.className = "pkg-card";
+      card.innerHTML = `
+        <h3>${tier.name}</h3>
+        <p class="pkg-desc">${tier.description}</p>
+        <ul class="pkg-perks">${(TIER_PERKS[tier.id] || []).map(p => `<li>${p}</li>`).join("")}</ul>
+        <div class="pkg-price">€${base.toFixed(2)} <span>/ ticket</span></div>
+        <div class="pkg-discount">Discount: €${discount.toFixed(2)} off</div>
+        <div class="pkg-remaining">Only ${tierRemaining} remaining</div>
+        <div class="qty-row">
+          <span>Quantity</span>
+          <div class="qty-stepper">
+            <button class="q-minus" ${qty<=1?'disabled':''}>−</button>
+            <span class="qty-val">${qty}</span>
+            <button class="q-plus" ${qty>=maxQty?'disabled':''}>+</button>
+          </div>
+        </div>
+        <div class="pkg-total">Total: <b>€${(base * qty).toFixed(2)}</b></div>
+        <button class="pkg-continue" ${outOfStock ? 'disabled' : ''}>
+          ${outOfStock ? "Sold out" : "Continue to seat selection →"}
+        </button>
+      `;
+
+      card.querySelector(".q-minus").addEventListener("click", () => {
+        qtyByTier[tier.id] = Math.max(1, qtyByTier[tier.id] - 1);
+        renderPackages();
+      });
+      card.querySelector(".q-plus").addEventListener("click", () => {
+        qtyByTier[tier.id] = Math.min(maxQty, qtyByTier[tier.id] + 1);
+        renderPackages();
+      });
+      card.querySelector(".pkg-continue").addEventListener("click", () => {
+        if (outOfStock) return;
+        Cart.setPackage({
+          day: selectedDay,
+          tier: tier.id,
+          tierName: tier.name,
+          qty,
+          pricePerTicket: base,
+          plannedTotal: base * qty
+        });
+        window.location.href = `event.html?day=${selectedDay}&tier=${tier.id}&qty=${qty}`;
+      });
+
+      grid.appendChild(card);
+    });
+  }
+
+  function renderAll() {
+    renderDayTabs();
+    renderSoldOutBanner();
+    renderPackages();
+  }
+
+  renderAll();
 </script>
 </body>
 </html>
