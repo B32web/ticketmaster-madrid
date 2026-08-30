@@ -7,11 +7,13 @@
 <link rel="stylesheet" href="css/base.css" />
 <link rel="stylesheet" href="css/pages.css" />
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script>
-  const supabaseUrl = 'https://crixlmnrpbjxcflcxpbf.supabase.co';
-  const supabaseAnonKey = 'sb_publishable_rbE4Y8tl9HMPwe8Wh60yaA_MF5yGq9P';
-  const supabase = supabase.createClient(supabaseUrl, supabaseAnonKey);
-</script>
+<!--
+  FIX: this used to also declare `supabaseUrl` / `supabaseAnonKey` / `supabase`
+  here with `const`, duplicating js/store.js's own declarations of the same
+  names. Two `const` declarations of the same identifier on one page throws a
+  SyntaxError that kills every script that loads after it — store.js already
+  sets this up, so this page just loads the SDK and leaves it to store.js.
+-->
 <style>
   /* Same ticket card styles as before */
   .ticket-card {
@@ -231,6 +233,28 @@
     border-radius: 20px;
     margin-left: 10px;
   }
+  /* Toast (was referenced by CSS classes .toast/.show but not defined anywhere) */
+  .toast {
+    position: fixed;
+    left: 50%;
+    bottom: 30px;
+    transform: translateX(-50%) translateY(20px);
+    background: #151515;
+    color: #fff;
+    padding: 14px 22px;
+    border-radius: 8px;
+    font-size: 13.5px;
+    font-weight: 600;
+    box-shadow: 0 8px 24px rgba(0,0,0,.25);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .2s ease, transform .2s ease;
+    z-index: 999;
+  }
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
 </style>
 </head>
 <body>
@@ -247,8 +271,8 @@
     </nav>
     <div class="header-actions">
       <div class="lang-switch">
-        <button class="lang-btn active" data-lang="es" onclick="setLanguage('es')">ES</button>
-        <button class="lang-btn" data-lang="en" onclick="setLanguage('en')">EN</button>
+        <button class="lang-btn active" data-lang="es" onclick="setLanguage('es')" type="button">ES</button>
+        <button class="lang-btn" data-lang="en" onclick="setLanguage('en')" type="button">EN</button>
       </div>
       <div class="header-user">Franklin Otieno</div>
     </div>
@@ -288,159 +312,178 @@
 <script src="js/data.js"></script>
 <script src="js/store.js"></script>
 <script>
+  // FIX: setLanguage, showToast, and the render helpers used to be declared
+  // *inside* the `async () => {...}` IIFE below. That makes them local to
+  // that function — invisible to the page's `onclick="setLanguage('es')"` /
+  // `onclick="showToast(...)"` attributes, which run in the global scope.
+  // Clicking any language button or any ticket action button
+  // (Add to Wallet / Details / Transfer) threw "X is not defined". Moving
+  // them to the top level (outside the IIFE) makes them ordinary global
+  // functions, exactly like the rest of the site does.
+
+  function setLanguage(lang) {
+    document.documentElement.lang = lang;
+    document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.lang === lang));
+    try { localStorage.setItem('tm_lang', lang); } catch (e) {}
+  }
+  setLanguage((function(){ try { return localStorage.getItem('tm_lang') || 'es'; } catch (e) { return 'es'; } })());
+
+  function showToast(msg) {
+    const toast = document.getElementById('toast');
+    toast.textContent = msg;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 3000);
+  }
+
+  function generateBarcode() {
+    let bars = '';
+    for (let i = 0; i < 50; i++) {
+      const width = Math.floor(Math.random() * 3) + 1;
+      bars += '<span style="width:' + width + 'px;"></span>';
+    }
+    return '<div class="barcode">' + bars + '</div>';
+  }
+
+  function maskTicketCode(code) {
+    if (!code || code.length < 4) return code || 'DEMO';
+    return code.slice(0, 2) + '***' + code.slice(-1);
+  }
+
+  function renderPrototypeTicket() {
+    // Show two prototype tickets (examples)
+    return `
+      <div style="text-align:center; margin-bottom:20px; padding:10px; background:#fff8e1; border:1px solid #ffb81c; border-radius:8px;">
+        <strong>Prototype Preview</strong> – This is how your ticket will look.
+      </div>
+      <div class="ticket-card animate-rise">
+        <div class="ticket-header">
+          <div class="ticket-brand"><span class="tm-logo"><span class="tm-logo-mark">®</span><span>ticketmaster</span></span></div>
+          <span class="ticket-type">BASIC</span>
+          <span class="verified">Verified</span>
+        </div>
+        <div class="ticket-main">
+          <div>
+            <h2 class="ticket-event">THE WEEKND · AFTER HOURS TIL DAWN</h2>
+            <p class="ticket-meta">Domingo, 30 Ago 2026 · Riyadh Air Metropolitano</p>
+            <div class="seat-info-grid">
+              <div class="info-box"><span class="info-label">Row</span><span class="info-value">11</span></div>
+              <div class="info-box"><span class="info-label">Seat</span><span class="info-value">6</span></div>
+              <div class="info-box"><span class="info-label">Entrance</span><span class="info-value">4</span></div>
+            </div>
+          </div>
+          <div class="barcode-panel">
+            <div class="barcode-label">Scan at entrance</div>
+            ${generateBarcode()}
+            <div class="barcode-number">AP***H</div>
+          </div>
+        </div>
+        <div class="ticket-footer">
+          <div class="action-left">
+            <button class="action primary" onclick="showToast('Prototype ticket – cannot be used for entry.')" type="button">Add to Wallet</button>
+            <button class="action" onclick="showToast('Prototype details')" type="button">Details</button>
+            <button class="action" onclick="showToast('Transfer not available for prototype')" type="button">Transfer</button>
+          </div>
+          <div class="ticket-id">Ticket ID: AP***H</div>
+        </div>
+      </div>
+
+      <div class="ticket-card animate-rise">
+        <div class="ticket-header">
+          <div class="ticket-brand"><span class="tm-logo"><span class="tm-logo-mark">®</span><span>ticketmaster</span></span></div>
+          <span class="ticket-type">BASIC</span>
+          <span class="verified">Verified</span>
+        </div>
+        <div class="ticket-main">
+          <div>
+            <h2 class="ticket-event">THE WEEKND · AFTER HOURS TIL DAWN</h2>
+            <p class="ticket-meta">Domingo, 30 Ago 2026 · Riyadh Air Metropolitano</p>
+            <div class="seat-info-grid">
+              <div class="info-box"><span class="info-label">Row</span><span class="info-value">10</span></div>
+              <div class="info-box"><span class="info-label">Seat</span><span class="info-value">2</span></div>
+              <div class="info-box"><span class="info-label">Entrance</span><span class="info-value">1</span></div>
+            </div>
+          </div>
+          <div class="barcode-panel">
+            <div class="barcode-label">Scan at entrance</div>
+            ${generateBarcode()}
+            <div class="barcode-number">MI***T</div>
+          </div>
+        </div>
+        <div class="ticket-footer">
+          <div class="action-left">
+            <button class="action primary" onclick="showToast('Prototype ticket – cannot be used for entry.')" type="button">Add to Wallet</button>
+            <button class="action" onclick="showToast('Prototype details')" type="button">Details</button>
+            <button class="action" onclick="showToast('Transfer not available for prototype')" type="button">Transfer</button>
+          </div>
+          <div class="ticket-id">Ticket ID: MI***T</div>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderRealTicket(order) {
+    const meta = order.metadata || {};
+    let html = '';
+    (meta.lines || []).forEach(line => {
+      const day = DAYS.find(d => d.id === line.day) || { weekday: "Domingo", date: "30 Ago 2026" };
+      const tierBadge = line.tierLabel || "TICKET";
+      const maskedCode = maskTicketCode(line.code || "DEMO");
+      const entrance = line.entrance || (Math.floor(Math.random()*4)+1);
+      const row = line.row || (Math.floor(Math.random()*20)+1);
+      const seat = line.seatNumber || (Math.floor(Math.random()*30)+1);
+
+      html += `
+        <div class="ticket-card animate-rise">
+          <div class="ticket-header">
+            <div class="ticket-brand"><span class="tm-logo"><span class="tm-logo-mark">®</span><span>ticketmaster</span></span></div>
+            <span class="ticket-type">${tierBadge.toUpperCase()}</span>
+            <span class="verified">Verified</span>
+          </div>
+          <div class="ticket-main">
+            <div>
+              <h2 class="ticket-event">THE WEEKND · AFTER HOURS TIL DAWN</h2>
+              <p class="ticket-meta">${day.weekday}, ${day.date} · Riyadh Air Metropolitano</p>
+              <div class="seat-info-grid">
+                <div class="info-box"><span class="info-label">Row</span><span class="info-value">${row}</span></div>
+                <div class="info-box"><span class="info-label">Seat</span><span class="info-value">${seat}</span></div>
+                <div class="info-box"><span class="info-label">Entrance</span><span class="info-value">${entrance}</span></div>
+              </div>
+            </div>
+            <div class="barcode-panel">
+              <div class="barcode-label">Scan at entrance</div>
+              ${generateBarcode()}
+              <div class="barcode-number">${maskedCode}</div>
+            </div>
+          </div>
+          <div class="ticket-footer">
+            <div class="action-left">
+              <button class="action primary" onclick="showToast('Ticket added to wallet')" type="button">Add to Wallet</button>
+              <button class="action" onclick="showToast('Details: ' + '${maskedCode}')" type="button">Details</button>
+              <button class="action" onclick="showToast('Transfer option not available')" type="button">Transfer</button>
+            </div>
+            <div class="ticket-id">Ticket ID: ${maskedCode}</div>
+          </div>
+        </div>`;
+    });
+    return html;
+  }
+
   (async () => {
-    function setLanguage(lang) {
-      document.documentElement.lang = lang;
-      document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.lang === lang));
-      try { localStorage.setItem('tm_lang', lang); } catch (e) {}
-    }
-    setLanguage((function(){ try { return localStorage.getItem('tm_lang') || 'es'; } catch (e) { return 'es'; } })());
-
-    function generateBarcode() {
-      let bars = '';
-      for (let i = 0; i < 50; i++) {
-        const width = Math.floor(Math.random() * 3) + 1;
-        bars += '<span style="width:' + width + 'px;"></span>';
-      }
-      return '<div class="barcode">' + bars + '</div>';
-    }
-
-    function maskTicketCode(code) {
-      if (code.length < 4) return code;
-      return code.slice(0, 2) + '***' + code.slice(-1);
-    }
-
-    function renderPrototypeTicket() {
-      // Show two prototype tickets (examples)
-      return `
-        <div style="text-align:center; margin-bottom:20px; padding:10px; background:#fff8e1; border:1px solid #ffb81c; border-radius:8px;">
-          <strong>Prototype Preview</strong> – This is how your ticket will look.
-        </div>
-        <div class="ticket-card animate-rise">
-          <div class="ticket-header">
-            <div class="ticket-brand"><span class="tm-logo"><span class="tm-logo-mark">®</span><span>ticketmaster</span></span></div>
-            <span class="ticket-type">BASIC</span>
-            <span class="verified">Verified</span>
-          </div>
-          <div class="ticket-main">
-            <div>
-              <h2 class="ticket-event">THE WEEKND · AFTER HOURS TIL DAWN</h2>
-              <p class="ticket-meta">Domingo, 30 Ago 2026 · Riyadh Air Metropolitano</p>
-              <div class="seat-info-grid">
-                <div class="info-box"><span class="info-label">Row</span><span class="info-value">11</span></div>
-                <div class="info-box"><span class="info-label">Seat</span><span class="info-value">6</span></div>
-                <div class="info-box"><span class="info-label">Entrance</span><span class="info-value">4</span></div>
-              </div>
-            </div>
-            <div class="barcode-panel">
-              <div class="barcode-label">Scan at entrance</div>
-              ${generateBarcode()}
-              <div class="barcode-number">AP***H</div>
-            </div>
-          </div>
-          <div class="ticket-footer">
-            <div class="action-left">
-              <button class="action primary" onclick="showToast('Prototype ticket – cannot be used for entry.')">Add to Wallet</button>
-              <button class="action" onclick="showToast('Prototype details')">Details</button>
-              <button class="action" onclick="showToast('Transfer not available for prototype')">Transfer</button>
-            </div>
-            <div class="ticket-id">Ticket ID: AP***H</div>
-          </div>
-        </div>
-
-        <div class="ticket-card animate-rise">
-          <div class="ticket-header">
-            <div class="ticket-brand"><span class="tm-logo"><span class="tm-logo-mark">®</span><span>ticketmaster</span></span></div>
-            <span class="ticket-type">BASIC</span>
-            <span class="verified">Verified</span>
-          </div>
-          <div class="ticket-main">
-            <div>
-              <h2 class="ticket-event">THE WEEKND · AFTER HOURS TIL DAWN</h2>
-              <p class="ticket-meta">Domingo, 30 Ago 2026 · Riyadh Air Metropolitano</p>
-              <div class="seat-info-grid">
-                <div class="info-box"><span class="info-label">Row</span><span class="info-value">10</span></div>
-                <div class="info-box"><span class="info-label">Seat</span><span class="info-value">2</span></div>
-                <div class="info-box"><span class="info-label">Entrance</span><span class="info-value">1</span></div>
-              </div>
-            </div>
-            <div class="barcode-panel">
-              <div class="barcode-label">Scan at entrance</div>
-              ${generateBarcode()}
-              <div class="barcode-number">MI***T</div>
-            </div>
-          </div>
-          <div class="ticket-footer">
-            <div class="action-left">
-              <button class="action primary" onclick="showToast('Prototype ticket – cannot be used for entry.')">Add to Wallet</button>
-              <button class="action" onclick="showToast('Prototype details')">Details</button>
-              <button class="action" onclick="showToast('Transfer not available for prototype')">Transfer</button>
-            </div>
-            <div class="ticket-id">Ticket ID: MI***T</div>
-          </div>
-        </div>
-      `;
-    }
-
-    function showToast(msg) {
-      document.getElementById('toast').textContent = msg;
-      document.getElementById('toast').classList.add('show');
-      setTimeout(() => document.getElementById('toast').classList.remove('show'), 3000);
-    }
-
-    const orders = await Orders.all();
     const list = document.getElementById("tickets-list");
+    let orders = [];
+    try {
+      orders = await Orders.all();
+    } catch (e) {
+      console.error('Could not load orders, falling back to prototype view:', e);
+      orders = [];
+    }
 
     if (orders.length === 0) {
-      // Show prototype tickets (this is what the user requested)
+      // No purchased tickets yet -> show the prototype preview
       list.innerHTML = renderPrototypeTicket();
     } else {
-      let html = '';
-      orders.forEach(order => {
-        const meta = order.metadata || {};
-        (meta.lines || []).forEach(line => {
-          const day = DAYS.find(d => d.id === line.day) || { weekday: "Domingo", date: "30 Ago 2026" };
-          const tierBadge = line.tierLabel || "TICKET";
-          const maskedCode = maskTicketCode(line.code || "DEMO");
-          const entrance = line.entrance || (Math.floor(Math.random()*4)+1);
-          const row = line.row || (Math.floor(Math.random()*20)+1);
-          const seat = line.seatNumber || (Math.floor(Math.random()*30)+1);
-
-          html += `
-            <div class="ticket-card animate-rise">
-              <div class="ticket-header">
-                <div class="ticket-brand"><span class="tm-logo"><span class="tm-logo-mark">®</span><span>ticketmaster</span></span></div>
-                <span class="ticket-type">${tierBadge.toUpperCase()}</span>
-                <span class="verified">Verified</span>
-              </div>
-              <div class="ticket-main">
-                <div>
-                  <h2 class="ticket-event">THE WEEKND · AFTER HOURS TIL DAWN</h2>
-                  <p class="ticket-meta">${day.weekday}, ${day.date} · Riyadh Air Metropolitano</p>
-                  <div class="seat-info-grid">
-                    <div class="info-box"><span class="info-label">Row</span><span class="info-value">${row}</span></div>
-                    <div class="info-box"><span class="info-label">Seat</span><span class="info-value">${seat}</span></div>
-                    <div class="info-box"><span class="info-label">Entrance</span><span class="info-value">${entrance}</span></div>
-                  </div>
-                </div>
-                <div class="barcode-panel">
-                  <div class="barcode-label">Scan at entrance</div>
-                  ${generateBarcode()}
-                  <div class="barcode-number">${maskedCode}</div>
-                </div>
-              </div>
-              <div class="ticket-footer">
-                <div class="action-left">
-                  <button class="action primary" onclick="showToast('Ticket added to wallet')">Add to Wallet</button>
-                  <button class="action" onclick="showToast('Details: ' + '${maskedCode}')">Details</button>
-                  <button class="action" onclick="showToast('Transfer option not available')">Transfer</button>
-                </div>
-                <div class="ticket-id">Ticket ID: ${maskedCode}</div>
-              </div>
-            </div>`;
-        });
-      });
-      list.innerHTML = html;
+      // Has real purchased tickets -> list those instead
+      list.innerHTML = orders.map(renderRealTicket).join('');
     }
 
     const params = new URLSearchParams(window.location.search);
