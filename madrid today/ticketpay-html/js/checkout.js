@@ -62,6 +62,15 @@ function renderOrderSummary() {
   const totalEl = document.getElementById("grandTotal");
   const payButton = document.getElementById("payButton");
 
+  // FIX: this used to be hardcoded to Saturday everywhere below, regardless
+  // of which day the customer actually selected on the seat-selection page
+  // (and Saturday has no real inventory — only Sunday does). Now it reflects
+  // the real package/day from Cart.
+  const pkg = Cart.getPackage();
+  const dayObj = DAYS.find(d => d.id === (pkg && pkg.day)) || DAYS.find(d => d.id === "sun");
+  const dateEl = document.getElementById("eventDate");
+  if (dateEl && dayObj) dateEl.textContent = `${dayObj.weekday}, ${dayObj.date}`;
+
   if (seats.length === 0) {
     summaryEl.innerHTML = '<div class="ticket-line"><span>No seats selected</span><strong>€0.00</strong></div>';
     totalEl.textContent = "€0.00";
@@ -137,16 +146,21 @@ payButton.addEventListener("click", async () => {
   const seats = Cart.getSeats();
   const total = parseFloat(document.getElementById("grandTotal").textContent.replace("€", ""));
 
+  const pkg = Cart.getPackage();
+  const dayId = (pkg && pkg.day) || "sun";
+  const dayObj = DAYS.find(d => d.id === dayId) || DAYS.find(d => d.id === "sun");
+
   const order = {
     code: Math.random().toString(36).slice(2, 8).toUpperCase(),
     date: new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }),
-    summary: "The Weeknd · Saturday, 29 Aug",
+    summary: `The Weeknd · ${dayObj.weekday}, ${dayObj.date}`,
     ticketCount: seats.length,
     total,
     method: "crypto",
     lines: seats.map(seat => ({
-      day: "sat",
+      day: dayId,
       tier: seat.section.toLowerCase(),
+      tierLabel: seat.sectionName,
       code: Math.random().toString(36).slice(2, 8).toUpperCase(),
       row: seat.row,
       seatNumber: seat.seat,
